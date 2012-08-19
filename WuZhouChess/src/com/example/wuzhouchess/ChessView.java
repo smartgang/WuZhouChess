@@ -354,7 +354,7 @@ public class ChessView extends android.view.View {
 		}
 		if(myCount==2&&yourCount==1)
 		{
-			if(Math.abs(Math.abs(yourChess.x-x)+Math.abs(yourChess.x-mySecondChess.x))==3)
+			if(Math.abs((yourChess.x-x)+(yourChess.x-mySecondChess.x))==3)
 			{
 				eatResult.add(yourChess);
 				eatCount++;
@@ -381,7 +381,7 @@ public class ChessView extends android.view.View {
 		}
 		if(myCount==2&&yourCount==1)
 		{
-			if(Math.abs(Math.abs(yourChess.y-y)+Math.abs(yourChess.y-mySecondChess.y))==3)
+			if(Math.abs((yourChess.y-y)+(yourChess.y-mySecondChess.y))==3)
 			{
 				eatResult.add(yourChess);
 				eatCount++;
