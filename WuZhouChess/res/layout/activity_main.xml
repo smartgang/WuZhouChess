@@ -3,19 +3,22 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <com.example.wuzhouchess.ChessView
-	 android:id="@+id/chess"
-		android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                tileSize="24"
-                />
-
-    <TextView
-        android:id="@+id/textView1"
+    <Button
+        android:id="@+id/button1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
+        android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:text="TextView" />
+        android:layout_marginTop="148dp"
+        android:text="人人对战" />
+
+    <Button
+        android:id="@+id/button2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/button1"
+        android:layout_below="@+id/button1"
+        android:layout_marginTop="71dp"
+        android:text="人机对战" />
 
 </RelativeLayout>
