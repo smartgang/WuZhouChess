@@ -165,8 +165,8 @@ public class ChessView extends android.view.View {
 						//AI时没做判断,增加AI判断的话，需要考虑如何将判断结果反馈回给AI？
 						Movement movement=currentPlayer.move(cb, movedChess, moveTargetX, moveTargetY);
 						//之后移动棋盘上的内容
-						move(movedChess,movement.toX,movement.toY);
-						eat(movedChess,moveTargetX,moveTargetY);
+						move(movement.fromX,movement.fromY,movement.toX,movement.toY);
+						eat(new Chess(movement.fromX,movement.fromY,currentPlayer.getColor()),movement.toX,movement.toY);
 						int win=isWin();
 						if(win!=0)
 						{
@@ -389,6 +389,7 @@ public class ChessView extends android.view.View {
 	//游戏结束后重新开始
 	public void gameRestart()
 	{
+		currentPlayer=playerBlack;
 		isWaiting=true;
 		timeCounter.startCounter();	
 		gameStatus=GameStatus_Playing;
@@ -435,14 +436,15 @@ public class ChessView extends android.view.View {
 		return false;		
 	}
 	//将棋子从自身位置移动到指定坐标，返回移动结果
-	public void move(Chess chess, int x,int y)
+	public void move(int fromX,int fromY, int toX,int toY)
 	{
-		cb.chessBoard[chess.x][chess.y]=GridEmpty;
-		cb.chessBoard[x][y]=chess.color;
+		int color =cb.chessBoard[fromX][fromY];
+		cb.chessBoard[fromX][fromY]=GridEmpty;
+		cb.chessBoard[toX][toY]=color;
 	}
 	//将chess移动到目标x,y后，要判断是否吃子，并将被吃的子做为结果返回
 	//函数前提是前面已经做过move的判断，并且为成功，所以这里不对move进行判断
-	public void eat(Chess chess, int x, int y)
+	private void eat(Chess chess, int x, int y)
 	{
 		ArrayList<Chess> eatResult= new ArrayList<Chess>();
 		ArrayList<Chess> myArray=blackChessArray;
@@ -473,7 +475,7 @@ public class ChessView extends android.view.View {
 	}
 	//吃法：顶
 	//在一条模，纵，斜线上，移动后该子与相邻同色子顶着另一色子，并且该线上没有其他的棋子
-	public int eatDing(ArrayList<Chess> eatResult,Chess chess, int x, int y)
+	private int eatDing(ArrayList<Chess> eatResult,Chess chess, int x, int y)
 	{
 		if(eatResult==null)return 0;
 		int eatCount=0;
@@ -601,7 +603,7 @@ public class ChessView extends android.view.View {
 
 	//吃法：夹
 	//在一条模，纵，斜线上，移动后该与同色的棋子夹着另一色子，并且该线上没有其他的棋子
-	public int eatJia(ArrayList<Chess> eatResult,Chess chess, int x, int y)
+	private int eatJia(ArrayList<Chess> eatResult,Chess chess, int x, int y)
 	{
 		if(eatResult==null)return 0;
 		int eatCount=0;
@@ -729,7 +731,7 @@ public class ChessView extends android.view.View {
 	
 	//吃法：挑
 	//在一条模，纵，斜线上，移动后该子左右两边各有一个异色子，且此线上只有这三个子，两个异色子被挑
-	public int eatTiao(ArrayList<Chess> eatResult,Chess chess, int x, int y)
+	private int eatTiao(ArrayList<Chess> eatResult,Chess chess, int x, int y)
 	{
 		if(eatResult==null)return 0;
 		int eatCount=0;

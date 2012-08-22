@@ -133,13 +133,12 @@ public class PlayActivity extends Activity {
 		.setTitle("One more?")
 		.setPositiveButton("Go!!!", new DialogInterface.OnClickListener(){
 			public void onClick(DialogInterface dialog, int whichButton)
-			{
-				int []locatonInWindow=new int[2];		
+			{	
 				cbv.setChessBoard();
 				//设置游戏状态
 				//cbv.gameStatus=ChessView.GameStatus_Playing;
 				cbv.gameRestart();
-				cbv.invalidate();				
+				cbv.invalidate();
 			}
 		})
 		.setNegativeButton("取消",new DialogInterface.OnClickListener(){

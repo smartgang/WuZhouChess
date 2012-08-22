@@ -17,8 +17,12 @@ public abstract class Player {
 	public final static int PlayerType_Human=1;
 	public final static int PlayerType_AI=2;
 	
+	final public static int GridEmpty=0;
 	final public static int ChessColor_Black=1;
 	final public static int ChessColor_White=2;
+	
+	private int playerType;
+	public ArrayList<Chess> chessArray;
 	
 	private String playerName;
 	private int totalPlayTime;
@@ -29,16 +33,13 @@ public abstract class Player {
 		return playerType;
 	}
 
-	private int color;
+	protected int color;
 	/**
 	 * @return the color
 	 */
 	public int getColor() {
 		return color;
 	}
-
-	private int playerType;
-	public ArrayList<Chess> chessArray;
 	
 	
 	
