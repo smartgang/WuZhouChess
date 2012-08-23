@@ -46,7 +46,15 @@ public class ChessView extends android.view.View {
 	final public static int ChessColor_White=2;
 	final public static int ChessColor_Yellow=3;
 	final public static int GridEmpty=0;
-
+	
+	//区别view上显示的各个部件，用于在onDraw中控制刷新的位置
+	final public static int ViewItem_All=0;
+	final public static int ViewItem_TotalTime=1;
+	final public static int ViewItem_CurrentRoundTime=2;
+	final public static int ViewItem_ChessBoard=3;//包括棋盘和其上的棋子
+	final public static int ViewItem_AteChess=4;//被吃掉的棋子
+	private int updatedItem=0;
+	
 	//定义onTouch与actionHandler消息传递的值，用于与用户操作交互
 //	final public static int ACTION_MOVE=1;
 	
@@ -70,6 +78,7 @@ public class ChessView extends android.view.View {
 	private Handler viewHolderHandler;
 	private Handler actionHandler;
 	private Thread actionThread;
+	private Thread viewUpdateThread;//画面更新线程，用来定时更新画面，由这个线程来触发invalidate();
 	
 	private boolean isTouched;
 	/**
@@ -118,6 +127,28 @@ public class ChessView extends android.view.View {
 	//初始化计算器和handler
 	private void initialCounterAndHandlers()
 	{
+		
+		viewUpdateThread=new Thread(new Runnable()
+		{
+
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+	            try {
+	            	while(gameStatus!=GameStatus_Over)
+					{	//每0.1秒更新一次画面，相当于100Hz的刷新频率
+	            		while(gameStatus==GameStatus_Pause)Thread.sleep(500);
+	            		Thread.sleep(100);
+//	            		invalidate();
+	            		updateView(0);
+					}
+					
+	            } catch (InterruptedException e) {
+	                e.printStackTrace();
+	            }
+			}
+		});
+		
 		timeCounterHandler=new Handler(){
 
 			/* (non-Javadoc)
@@ -129,7 +160,7 @@ public class ChessView extends android.view.View {
 				currentRoundTime=msg.what;
 //				Log.d(LOG_TGA,"updating currentRoundTime");
 				//更新计时器后刷新整个显示
-				updateView();
+//				updateView(ViewItem_CurrentRoundTime);
 			}
 			
 		};
@@ -144,6 +175,7 @@ public class ChessView extends android.view.View {
 			@Override
 			public void handleMessage(Message msg) {
 				// TODO Auto-generated method stub
+				updatedItem=msg.what;
 				invalidate();
 			}
 			
@@ -156,8 +188,9 @@ public class ChessView extends android.view.View {
 			public void run() {
 				// TODO Auto-generated method stub
 	            try {
-					while(gameStatus!=GameStatus_Pause&&gameStatus!=GameStatus_Over)
-					{	
+					while(gameStatus!=GameStatus_Over)
+					{	//暂停时每0.5秒检测一次
+						while(gameStatus==GameStatus_Pause)Thread.sleep(500);
 						//等待用户操作,0.2秒检测一次
 						while(isWaiting&&movedChess==null)Thread.sleep(200);
 						Log.d(LOG_TGA,"user ating");
@@ -182,7 +215,7 @@ public class ChessView extends android.view.View {
 						switchPlayer();
 						//交换用户后如果当前用户是人类玩家，则需要等待用户操作
 						if(currentPlayer.getPlayerType()==Player.PlayerType_Human)isWaiting=true;
-						updateView();
+//						updateView(ViewItem_ChessBoard);
 					}
 	            } catch (InterruptedException e) {
 	                e.printStackTrace();
@@ -206,10 +239,12 @@ public class ChessView extends android.view.View {
 		}
 	}
 	
-	private void updateView()
+	private void updateView(int viewItem)
 	{
-		Message msg;
-		actionHandler.sendEmptyMessage(0);
+		Message msg=new Message();
+		msg.obj=viewItem;
+		msg.what=viewItem;
+		actionHandler.sendMessage(msg);
 	}
 	//走完一步后，轮到下一方
 	private void switchPlayer()
@@ -264,7 +299,7 @@ public class ChessView extends android.view.View {
 					{
 						choseChess=c;
 						choseChess.color=currentPlayer.getChessArray().get(i).color;
-						updateView();
+//						updateView(ViewItem_ChessBoard);
 						return true;
 					}
 				}
@@ -285,7 +320,7 @@ public class ChessView extends android.view.View {
 				{
 					choseChess.x=c.x;
 					choseChess.y=c.y;
-					updateView();
+//					updateView(ViewItem_ChessBoard);
 				}
 			}
 			return true;
@@ -321,14 +356,13 @@ public class ChessView extends android.view.View {
 		super.onDraw(canvas);	
 		if(gameStatus==GameStatus_Playing)
 		{	
-			Log.d(LOG_TGA,"onDrawing");
+//			Log.d(LOG_TGA,"onDrawing");
+			drawTotalTime(canvas);
+			drawCurrentRoundTime(canvas);
 			cb.draw(canvas,boardX, boardY,boardGridLength);
 			for(int i=0;i<blackChessArray.size();i++)blackChessArray.get(i).draw(canvas, boardX, boardY, boardGridLength,ChessColor_Black);
 			for(int i=0;i<whiteChessArray.size();i++)whiteChessArray.get(i).draw(canvas,boardX, boardY, boardGridLength,ChessColor_White);
-			if(null!=choseChess)choseChess.draw(canvas, boardX, boardY, boardGridLength,  ChessColor_Yellow);	
-			if(choseChess==null)Log.d(LOG_TGA,"choseChess is null");
-			drawTotalTime(canvas);
-			drawCurrentRoundTime(canvas);
+			if(null!=choseChess)choseChess.draw(canvas, boardX, boardY, boardGridLength,  ChessColor_Yellow);						
 		}
 	}
 
@@ -384,6 +418,7 @@ public class ChessView extends android.view.View {
 		timeCounter.startCounter();
 		timeCounter.start();
 		actionThread.start();
+		viewUpdateThread.start();
 		gameStatus=GameStatus_Playing;
 	}
 	//游戏结束后重新开始
@@ -399,7 +434,7 @@ public class ChessView extends android.view.View {
 		timeCounter.startCounter();	
 		timeCounter.start();
 		actionThread.start();
-		
+		viewUpdateThread.start();		
 	}
 	//暂停
 	public void gamePause()
@@ -474,6 +509,7 @@ public class ChessView extends android.view.View {
 					eat.color=chess.color;
 					cb.chessBoard[chess.x][chess.y]=GridEmpty;
 					cb.chessBoard[eat.x][eat.y]=chess.color;
+					eat.setEatFlag();
 					myArray.add(eat);
 				}
 			}
