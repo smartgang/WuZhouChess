@@ -389,11 +389,17 @@ public class ChessView extends android.view.View {
 	//游戏结束后重新开始
 	public void gameRestart()
 	{
-		currentPlayer=playerBlack;
 		isWaiting=true;
-		timeCounter.startCounter();	
 		gameStatus=GameStatus_Playing;
 		initialChessBorad();
+		initialCounterAndHandlers();
+		playerBlack.setChessArray(blackChessArray);
+		playerWhite.setChessArray(whiteChessArray);
+		currentPlayer=playerBlack;
+		timeCounter.startCounter();	
+		timeCounter.start();
+		actionThread.start();
+		
 	}
 	//暂停
 	public void gamePause()

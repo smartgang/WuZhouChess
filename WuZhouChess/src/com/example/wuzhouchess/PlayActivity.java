@@ -134,7 +134,7 @@ public class PlayActivity extends Activity {
 		.setPositiveButton("Go!!!", new DialogInterface.OnClickListener(){
 			public void onClick(DialogInterface dialog, int whichButton)
 			{	
-				cbv.setChessBoard();
+//				cbv.setChessBoard();
 				//…Ë÷√”Œœ∑◊¥Ã¨
 				//cbv.gameStatus=ChessView.GameStatus_Playing;
 				cbv.gameRestart();
