@@ -11,10 +11,10 @@ import android.os.Message;
  */
 public class TimeCounter extends Thread {
 
-	private boolean isRunning;
-	private boolean isPausing;//暂停时使用，因为无法控制停止和开始，所以暂时只能增加这个控制位
 	private int counter;
 	private Handler handler;
+	private boolean isPausing;//暂停时使用，因为无法控制停止和开始，所以暂时只能增加这个控制位
+	private boolean isRunning;
 	
 	
 	/**
@@ -25,6 +25,28 @@ public class TimeCounter extends Thread {
 		this.handler = handler;
 		isRunning=false;
 		isPausing=false;
+		counter=0;
+	}
+	/**
+	 * @return the couter
+	 */
+	public int getCouter() {
+		return counter;
+	}
+	/**
+	 * @return the isRunning
+	 */
+	public boolean isRunning() {
+		return isRunning;
+	}
+	//暂停
+	public void pauseCounter()
+	{
+		isPausing=true;
+	}
+	//重置计数值
+	public void resetCounter()
+	{
 		counter=0;
 	}
 	/* (non-Javadoc)
@@ -55,34 +77,12 @@ public class TimeCounter extends Thread {
 		isRunning=true;
 		isPausing=false;
 	}
-	//暂停
-	public void pauseCounter()
-	{
-		isPausing=true;
-	}
-	//重置计数值
-	public void resetCounter()
-	{
-		counter=0;
-	}
 	//停止
 	public void stopCounter()
 	{
 		isRunning=false;
 		isPausing=false;
 		counter=0;
-	}
-	/**
-	 * @return the couter
-	 */
-	public int getCouter() {
-		return counter;
-	}
-	/**
-	 * @return the isRunning
-	 */
-	public boolean isRunning() {
-		return isRunning;
 	}
 	
 }

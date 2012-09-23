@@ -11,9 +11,9 @@ import java.util.ArrayList;
  */
 public class AIPlayer extends Player {
 
+	private ChessBoard cb;
 	private ArrayList<Movement> movementList;
 	private ArrayList<Chess> opponentChessList;
-	private ChessBoard cb;
 	private int opponentColor;
 	
 	public AIPlayer(String playerName, int color, int playerType) {
@@ -25,30 +25,6 @@ public class AIPlayer extends Player {
 		else opponentColor=ChessColor_Black;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.example.classes.Player#move(com.example.classes.ChessBoard, com.example.classes.Chess, int, int)
-	 */
-	@Override
-	public Movement move(ChessBoard chessBoard, Chess c, int targetX, int targetY) {
-		// TODO Auto-generated method stub
-		copyChessBoard(chessBoard);
-		getOpponentChessList();
-		Movement m=getBestMovement();
-		if(m!=null)
-		{
-			Chess temp;
-			for(int i=0;i<chessArray.size();i++)
-			{	
-				temp=chessArray.get(i);
-				if(temp.x==m.fromX&temp.y==m.fromY)
-				{
-					temp.x=m.toX;
-					temp.y=m.toY;
-				}
-			}
-		}
-		return m;
-	}
 	private void copyChessBoard(ChessBoard chessBoard)
 	{
 		cb=new ChessBoard();
@@ -60,153 +36,36 @@ public class AIPlayer extends Player {
 			}
 		}
 	}
-	private int getOpponentChessList()
-	{
-		//生成对手的棋子序列
-		opponentChessList=new ArrayList<Chess>();
-		for(int i=0;i<5;i++)
+	/*********************** 下面是吃法的判断，照抄ChessView里的内容******************************/
+		//将chess移动到目标x,y后，要判断是否吃子，并将被吃的子做为结果返回
+		//函数前提是前面已经做过move的判断，并且为成功，所以这里不对move进行判断
+		private int eat(Chess chess, int x, int y)
 		{
-			for(int j=0;j<5;j++)
+			ArrayList<Chess> eatResult= new ArrayList<Chess>();
+			ArrayList<Chess> myArray=chessArray;
+			ArrayList<Chess> yourArray=opponentChessList;
+			int eatCount=eatDing(eatResult,chess,x,y);
+			eatCount+=eatJia(eatResult,chess,x,y);
+			eatCount+=eatTiao(eatResult,chess,x,y);
+			return eatCount;
+	/*
+			for(int i=0;i<eatCount;i++)
 			{
-				if(cb.chessBoard[i][j]==opponentColor)
+				Chess eat=eatResult.get(i);
+				for(int j=0;j<yourArray.size();j++)
 				{
-					Chess c=new Chess(i,j,opponentColor);
-					opponentChessList.add(c);
+					if(yourArray.get(j).x==eat.x&&yourArray.get(j).y==eat.y)
+					{
+						yourArray.remove(j);
+						eat.color=chess.color;
+						cb.chessBoard[chess.x][chess.y]=GridEmpty;
+						cb.chessBoard[eat.x][eat.y]=chess.color;
+						myArray.add(eat);
+					}
 				}
 			}
+	*/
 		}
-		return opponentChessList.size();
-	}
-	
-	private Movement getBestMovement()
-	{
-		Movement bestMovement=null;
-		Movement tempMovement=null;
-		int bestMovementRate=0;//用来保存当前最好步骤的得分
-		int tempRate=0;
-		 //能吃别人，一个子10分
-		 //防止别人吃，一个子10分
-		 //被人别一个子扣10分
-		int movementCount=getMovementList();
-		if(movementCount>0)bestMovement=movementList.get(0);
-		for(int i=0;i<movementCount;i++)
-		{
-			tempMovement=movementList.get(i);
-			move(tempMovement);//在棋盘上将准备移动的棋移好，以便做吃的判断
-			tempRate=eat(new Chess(tempMovement.fromX,tempMovement.fromY,color),
-								tempMovement.toX,
-								tempMovement.toY)*10;
-			reverseMoving(tempMovement);//判断后，要将棋子移回来
-			if(tempRate>bestMovementRate)
-			{
-				bestMovement=tempMovement;
-				bestMovementRate=tempRate;
-			}			
-		}
-		if(bestMovementRate==0)
-		{
-			int i=(int)(Math.random()*movementCount);
-			bestMovement=movementList.get(i);
-		}
-		return bestMovement;
-	}
-	//获取可移动的列表，返回移动数
-	private int getMovementList()
-	{
-		movementList.clear();
-		int chessCount=chessArray.size();
-		for(int i=0;i<chessCount;i++)
-		{	
-			int fromX=chessArray.get(i).x;
-			int fromY=chessArray.get(i).y;
-			for(int j=0;j<8;j++)
-			{
-				int toX=fromX;
-				int toY=fromY;
-				//对8个方向进行判断
-				switch(j)
-				{
-				case 0:	toX--;break;//左边
-				case 1:	if((fromX+fromY)%2!=0)break;
-						toX--;//左上
-						toY--;
-						break;
-				case 2:	toY--;break;//上方
-				case 3:	if((fromX+fromY)%2!=0)break;
-						toX++;//右上
-						toY--;
-						break;
-				case 4:	toX++;break;//右边
-				case 5:	if((fromX+fromY)%2!=0)break;
-						toX++;//右下
-						toY++;
-						break;
-				case 6:	toY++;break;//下方
-				case 7:	if((fromX+fromY)%2!=0)break;
-						toX--;//左下
-						toY++;
-						break;
-				default:break;
-				}
-				Movement m=new Movement(fromX,fromY,toX,toY);
-				if(isMovable(m))movementList.add(m);
-			}
-		}
-		return movementList.size();
-	}
-	
-	private boolean isMovable(Movement movement)
-	{
-		if(cb.chessBoard[movement.fromX][movement.fromY]!=color)return false;
-		if(movement.toX<0||movement.toX>4)return false;
-		if(movement.toY<0||movement.toY>4)return false;
-		if(cb.chessBoard[movement.toX][movement.toY]==GridEmpty)return true;
-		return false;
-	}
-
-	private void move(Movement m)
-	{
-		int color =cb.chessBoard[m.fromX][m.fromY];
-		cb.chessBoard[m.fromX][m.fromY]=GridEmpty;
-		cb.chessBoard[m.toX][m.toY]=color;
-	}
-	
-	private void reverseMoving(Movement m)
-	{
-		int color =cb.chessBoard[m.toX][m.toY];
-		cb.chessBoard[m.toX][m.toY]=GridEmpty;
-		cb.chessBoard[m.fromX][m.fromY]=color;
-	}
-/*********************** 下面是吃法的判断，照抄ChessView里的内容******************************/
-	//将chess移动到目标x,y后，要判断是否吃子，并将被吃的子做为结果返回
-	//函数前提是前面已经做过move的判断，并且为成功，所以这里不对move进行判断
-	private int eat(Chess chess, int x, int y)
-	{
-		ArrayList<Chess> eatResult= new ArrayList<Chess>();
-		ArrayList<Chess> myArray=chessArray;
-		ArrayList<Chess> yourArray=opponentChessList;
-		int eatCount=eatDing(eatResult,chess,x,y);
-		eatCount+=eatJia(eatResult,chess,x,y);
-		eatCount+=eatTiao(eatResult,chess,x,y);
-		return eatCount;
-/*
-		for(int i=0;i<eatCount;i++)
-		{
-			Chess eat=eatResult.get(i);
-			for(int j=0;j<yourArray.size();j++)
-			{
-				if(yourArray.get(j).x==eat.x&&yourArray.get(j).y==eat.y)
-				{
-					yourArray.remove(j);
-					eat.color=chess.color;
-					cb.chessBoard[chess.x][chess.y]=GridEmpty;
-					cb.chessBoard[eat.x][eat.y]=chess.color;
-					myArray.add(eat);
-				}
-			}
-		}
-*/
-	}
 	//吃法：顶
 	//在一条模，纵，斜线上，移动后该子与相邻同色子顶着另一色子，并且该线上没有其他的棋子
 	private int eatDing(ArrayList<Chess> eatResult,Chess chess, int x, int y)
@@ -334,7 +193,7 @@ public class AIPlayer extends Player {
 		}
 		return eatCount;
 	}
-
+	
 	//吃法：夹
 	//在一条模，纵，斜线上，移动后该与同色的棋子夹着另一色子，并且该线上没有其他的棋子
 	private int eatJia(ArrayList<Chess> eatResult,Chess chess, int x, int y)
@@ -462,7 +321,6 @@ public class AIPlayer extends Player {
 		}
 		return eatCount;
 	}
-	
 	//吃法：挑
 	//在一条模，纵，斜线上，移动后该子左右两边各有一个异色子，且此线上只有这三个子，两个异色子被挑
 	private int eatTiao(ArrayList<Chess> eatResult,Chess chess, int x, int y)
@@ -598,6 +456,154 @@ public class AIPlayer extends Player {
 			}
 		}
 		return eatCount;
+	}
+	
+	private Movement getBestMovement()
+	{
+		Movement bestMovement=null;
+		Movement tempMovement=null;
+		int bestMovementRate=0;//用来保存当前最好步骤的得分
+		int tempRate=0;
+		 //能吃别人，一个子10分
+		 //防止别人吃，一个子10分
+		 //被人别一个子扣10分
+		int movementCount=getMovementList();
+		if(movementCount>0)bestMovement=movementList.get(0);
+		for(int i=0;i<movementCount;i++)
+		{
+			tempMovement=movementList.get(i);
+			move(tempMovement);//在棋盘上将准备移动的棋移好，以便做吃的判断
+			tempRate=eat(new Chess(tempMovement.fromX,tempMovement.fromY,color),
+								tempMovement.toX,
+								tempMovement.toY)*10;
+			reverseMoving(tempMovement);//判断后，要将棋子移回来
+			if(tempRate>bestMovementRate)
+			{
+				bestMovement=tempMovement;
+				bestMovementRate=tempRate;
+			}			
+		}
+		if(bestMovementRate==0)
+		{
+			int i=(int)(Math.random()*movementCount);
+			bestMovement=movementList.get(i);
+		}
+		return bestMovement;
+	}
+
+	//获取可移动的列表，返回移动数
+	private int getMovementList()
+	{
+		movementList.clear();
+		int chessCount=chessArray.size();
+		for(int i=0;i<chessCount;i++)
+		{	
+			int fromX=chessArray.get(i).x;
+			int fromY=chessArray.get(i).y;
+			for(int j=0;j<8;j++)
+			{
+				int toX=fromX;
+				int toY=fromY;
+				//对8个方向进行判断
+				switch(j)
+				{
+				case 0:	toX--;break;//左边
+				case 1:	if((fromX+fromY)%2!=0)break;
+						toX--;//左上
+						toY--;
+						break;
+				case 2:	toY--;break;//上方
+				case 3:	if((fromX+fromY)%2!=0)break;
+						toX++;//右上
+						toY--;
+						break;
+				case 4:	toX++;break;//右边
+				case 5:	if((fromX+fromY)%2!=0)break;
+						toX++;//右下
+						toY++;
+						break;
+				case 6:	toY++;break;//下方
+				case 7:	if((fromX+fromY)%2!=0)break;
+						toX--;//左下
+						toY++;
+						break;
+				default:break;
+				}
+				Movement m=new Movement(fromX,fromY,toX,toY);
+				if(isMovable(m))movementList.add(m);
+			}
+		}
+		return movementList.size();
+	}
+	
+	private int getOpponentChessList()
+	{
+		//生成对手的棋子序列
+		opponentChessList=new ArrayList<Chess>();
+		for(int i=0;i<5;i++)
+		{
+			for(int j=0;j<5;j++)
+			{
+				if(cb.chessBoard[i][j]==opponentColor)
+				{
+					Chess c=new Chess(i,j,opponentColor);
+					opponentChessList.add(c);
+				}
+			}
+		}
+		return opponentChessList.size();
+	}
+	private boolean isMovable(Movement movement)
+	{
+		if(cb.chessBoard[movement.fromX][movement.fromY]!=color)return false;
+		if(movement.toX<0||movement.toX>4)return false;
+		if(movement.toY<0||movement.toY>4)return false;
+		if(cb.chessBoard[movement.toX][movement.toY]==GridEmpty)return true;
+		return false;
+	}
+	/* (non-Javadoc)
+	 * @see com.example.classes.Player#move(com.example.classes.ChessBoard, com.example.classes.Chess, int, int)
+	 */
+	@Override
+	public Movement move(ChessBoard chessBoard, Chess c, int targetX, int targetY) {
+		// TODO Auto-generated method stub
+		copyChessBoard(chessBoard);
+		getOpponentChessList();
+		Movement m=getBestMovement();
+		if(m!=null)
+		{
+			Chess temp;
+			for(int i=0;i<chessArray.size();i++)
+			{	
+				temp=chessArray.get(i);
+				if(temp.x==m.fromX&temp.y==m.fromY)
+				{
+					temp.x=m.toX;
+					temp.y=m.toY;
+				}
+			}
+		}
+		return m;
+	}
+
+	private void move(Movement m)
+	{
+		int color =cb.chessBoard[m.fromX][m.fromY];
+		cb.chessBoard[m.fromX][m.fromY]=GridEmpty;
+		cb.chessBoard[m.toX][m.toY]=color;
+	}
+	
+	private void reverseMoving(Movement m)
+	{
+		int color =cb.chessBoard[m.toX][m.toY];
+		cb.chessBoard[m.toX][m.toY]=GridEmpty;
+		cb.chessBoard[m.fromX][m.fromY]=color;
+	}
+
+	@Override
+	public void tellOpponet() {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

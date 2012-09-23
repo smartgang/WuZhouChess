@@ -21,6 +21,7 @@
             </intent-filter>
         </activity>
         <activity android:name="PlayActivity"></activity>
+        <activity android:name="InternetGameActivity"></activity>
     </application>
-
+    <uses-permission android:name="android.permission.INTERNET"/> 
 </manifest>

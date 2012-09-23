@@ -5,7 +5,10 @@ package com.example.classes;
 
 import java.util.ArrayList;
 
+import com.example.wuzhouchess.Views.ChessView;
 
+
+import android.os.Handler;
 import android.text.format.Time;
 
 /**
@@ -14,31 +17,63 @@ import android.text.format.Time;
  */
 public abstract class Player {
 	
-	public final static int PlayerType_Human=1;
-	public final static int PlayerType_AI=2;
-	
-	final public static int GridEmpty=0;
 	final public static int ChessColor_Black=1;
 	final public static int ChessColor_White=2;
 	
-	private int playerType;
+	final public static int GridEmpty=0;
+	public final static int PlayerType_Human=1;
+	public final static int PlayerType_AI=2;
+	public final static int PlayerType_Internet=3;
+	public Handler gameCenterHandler;
 	public ArrayList<Chess> chessArray;
+	protected int color;
+	protected ChessView chessView;
 	
-	private String playerName;
-	private int totalPlayTime;
 	/**
-	 * @return the playerType
+	 * @return the chessView
 	 */
-	public int getPlayerType() {
-		return playerType;
+	public ChessView getChessView() {
+		return chessView;
+	}
+	/**
+	 * @param chessView the chessView to set
+	 */
+	public void setChessView(ChessView chessView) {
+		this.chessView = chessView;
 	}
 
-	protected int color;
 	/**
-	 * @return the color
+	 * @return the gameCenterHandler
 	 */
-	public int getColor() {
-		return color;
+	public Handler getGameCenterHandler() {
+		return gameCenterHandler;
+	}
+	/**
+	 * @param gameCenterHandler the gameCenterHandler to set
+	 */
+	public void setGameCenterHandler(Handler gameCenterHandler) {
+		this.gameCenterHandler = gameCenterHandler;
+	}
+
+	private String playerName;
+	private int playerType;
+	private int totalPlayTime;
+
+	/**
+	 * @param playerName
+	 * @param color
+	 * @param playerType
+	 */
+	public Player(String playerName, int color, int playerType) {
+		super();
+		this.playerName = playerName;
+		this.color = color;
+		this.playerType = playerType;
+	}
+	public void addChess(Chess c)
+	{
+		Chess chess=new Chess(c.x,c.y, c.color);
+		chessArray.add(chess);
 	}
 	
 	
@@ -52,59 +87,38 @@ public abstract class Player {
 
 
 	/**
-	 * @param chessArray the chessArray to set
+	 * @return the color
 	 */
-	public void setChessArray(ArrayList<Chess> chessArray) {
-		this.chessArray = chessArray;
+	public int getColor() {
+		return color;
 	}
 
 
-	/**
-	 * @param playerName
-	 * @param color
-	 * @param playerType
-	 */
-	public Player(String playerName, int color, int playerType) {
-		super();
-		this.playerName = playerName;
-		this.color = color;
-		this.playerType = playerType;
-	}
-
-
-	public abstract Movement move(ChessBoard chessBorad,Chess c, int targetX, int targetY);
-	
-	
 	/**
 	 * @return the playerName
 	 */
 	public String getPlayerName() {
 		return playerName;
 	}
+
+
 	/**
-	 * @param playerName the playerName to set
+	 * @return the playerType
 	 */
-	public void setPlayerName(String playerName) {
-		this.playerName = playerName;
+	public int getPlayerType() {
+		return playerType;
 	}
+	
+	
 	/**
 	 * @return the seconds
 	 */
 	public int getTotalPlayTime() {
 		return totalPlayTime;
 	}
-	/**
-	 * @param seconds the seconds to set
-	 */
-	public void setTotalPlayTime(int seconds) {
-		this.totalPlayTime = seconds;
-	}
+	public abstract Movement move(ChessBoard chessBorad,Chess c, int targetX, int targetY);
 	
-	public void addChess(Chess c)
-	{
-		Chess chess=new Chess(c.x,c.y, c.color);
-		chessArray.add(chess);
-	}
+	public abstract void tellOpponet();
 	
 	public void removeChess(Chess c)
 	{
@@ -119,6 +133,26 @@ public abstract class Player {
 				break;
 			}
 		}
+	}
+	/**
+	 * @param chessArray the chessArray to set
+	 */
+	public void setChessArray(ArrayList<Chess> chessArray) {
+		this.chessArray = chessArray;
+	}
+	
+	/**
+	 * @param playerName the playerName to set
+	 */
+	public void setPlayerName(String playerName) {
+		this.playerName = playerName;
+	}
+	
+	/**
+	 * @param seconds the seconds to set
+	 */
+	public void setTotalPlayTime(int seconds) {
+		this.totalPlayTime = seconds;
 	}
 
 }

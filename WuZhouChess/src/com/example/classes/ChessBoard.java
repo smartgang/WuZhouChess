@@ -14,11 +14,11 @@ import android.graphics.Paint;
 //定义一个5*5的棋盘，总共10个棋子，每一个的内容为棋子的颜色
 public class ChessBoard{
 	
-	public int[][] chessBoard;
 	final public static int ChessColor_Black=1;
 	final public static int ChessColor_White=2;
 	final public static int ChessColor_Yellow=3;
 	final public static int GridEmpty=0;
+	public int[][] chessBoard;
 	
 	//初始化棋盘
 	public ChessBoard() {

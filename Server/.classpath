@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry excluding="src/" kind="src" path=""/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="D:/个人/002 A plan/003 学习参考材料/Web服务器/JSON相关Jar/commons-beanutils-1.7.0.jar"/>
+	<classpathentry kind="lib" path="D:/个人/002 A plan/003 学习参考材料/Web服务器/JSON相关Jar/commons-lang-2.1.jar"/>
+	<classpathentry kind="lib" path="D:/个人/002 A plan/003 学习参考材料/Web服务器/JSON相关Jar/commons-logging-1.1.1.jar"/>
+	<classpathentry kind="lib" path="D:/个人/002 A plan/003 学习参考材料/Web服务器/JSON相关Jar/ezmorph-1.0.2.jar"/>
+	<classpathentry kind="lib" path="D:/个人/002 A plan/003 学习参考材料/Web服务器/JSON相关Jar/json-lib-2.4-jdk15.jar"/>
+	<classpathentry kind="lib" path="D:/个人/002 A plan/003 学习参考材料/Web服务器/JSON相关Jar/org.apache.commons.collections_3.2.0.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

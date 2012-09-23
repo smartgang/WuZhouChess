@@ -19,18 +19,12 @@ public class Chess {
 	final public static int ChessColor_Yellow=3;
 	final public static int GridEmpty=0;
 	
-	private boolean eatFlag;//被吃的标识，表示该棋子是否刚被吃，更换颜色，被吃后，要相应有被吃掉的动画
-	/**
-	 * @param eatFlag the eatFlag to set
-	 */
-	public void setEatFlag() {
-		this.eatFlag = true;
-	}
+	public int color;
 	private int eatAnimationCount;//用来做为动画的标识，当棋子被吃时，每一次更新（0.1秒）这个值加1
+	private boolean eatFlag;//被吃的标识，表示该棋子是否刚被吃，更换颜色，被吃后，要相应有被吃掉的动画
 								//在这个值为4，5，6时，不显示该棋子，显示闪烁的效果
 	public int x;
 	public int y;
-	public int color;
 	/**
 	 * @param x
 	 * @param y
@@ -66,5 +60,11 @@ public class Chess {
 			eatFlag=false;
 			eatAnimationCount=0;
 		}
+	}
+	/**
+	 * @param eatFlag the eatFlag to set
+	 */
+	public void setEatFlag() {
+		this.eatFlag = true;
 	}
 }

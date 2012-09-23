@@ -5,6 +5,7 @@ package com.example.wuzhouchess;
 
 import com.example.classes.AIPlayer;
 import com.example.classes.HumanPlayer;
+import com.example.classes.InternetPlayer;
 import com.example.classes.Player;
 import com.example.wuzhouchess.Views.ChessView;
 
@@ -14,7 +15,6 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -25,11 +25,34 @@ import android.widget.Button;
  */
 public class PlayActivity extends Activity {
 
-	ChessView cbv;
-	Button btnPause;
-	Player whitePlayer;
 	Player blackPlayer;
+	Button btnPause;
+	ChessView cbv;
 	Handler viewHolderHandler;
+	Player whitePlayer;
+	
+	void gameOver()
+	{
+		new AlertDialog.Builder(PlayActivity.this)
+		.setTitle("One more?")
+		.setPositiveButton("Go!!!", new DialogInterface.OnClickListener(){
+			public void onClick(DialogInterface dialog, int whichButton)
+			{	
+//				cbv.setChessBoard();
+				//设置游戏状态
+				//cbv.gameStatus=ChessView.GameStatus_Playing;
+				cbv.gameRestart();
+				cbv.invalidate();
+			}
+		})
+		.setNegativeButton("取消",new DialogInterface.OnClickListener(){
+			public void onClick(DialogInterface dialog, int whichButton)
+			{
+				
+			}
+		})
+		.show();
+	}
 	
 	/* (non-Javadoc)
 	 * @see android.app.Activity#onCreate(android.os.Bundle)
@@ -61,21 +84,26 @@ public class PlayActivity extends Activity {
 				
 			}			
 		};
-		
-		
-		
+				
 		String playerType=getIntent().getStringExtra("PlayerType");
 		if(playerType.equals("H2AI"))//人机对战
 		{
 			whitePlayer=new AIPlayer( "白方", Player.ChessColor_White, Player.PlayerType_AI);
 			blackPlayer=new HumanPlayer( "黑方", Player.ChessColor_Black, Player.PlayerType_Human);
 		}
-		else//人人对战
+		else if(playerType.equals("H2H"))//人人对战
 		{
 			whitePlayer=new HumanPlayer( "白方", Player.ChessColor_White, Player.PlayerType_Human);
 			blackPlayer=new HumanPlayer( "黑方", Player.ChessColor_Black, Player.PlayerType_Human);
-
 		}
+		else //网络对战
+		{
+			whitePlayer=new InternetPlayer( "白方", Player.ChessColor_White, Player.PlayerType_Internet);
+			blackPlayer=new HumanPlayer( "黑方", Player.ChessColor_Black, Player.PlayerType_Human);
+		}
+		//将ChessView句柄知会给player，以便player能访问chessview的东西
+		whitePlayer.setChessView(cbv);
+		blackPlayer.setChessView(cbv);
 		//设置与chessView的通信handler
 		cbv.setViewHolderHandler(viewHolderHandler);
 		cbv.setPlayer(whitePlayer, blackPlayer);
@@ -125,28 +153,5 @@ public class PlayActivity extends Activity {
 			}
 			
 		});
-	}
-	
-	void gameOver()
-	{
-		new AlertDialog.Builder(PlayActivity.this)
-		.setTitle("One more?")
-		.setPositiveButton("Go!!!", new DialogInterface.OnClickListener(){
-			public void onClick(DialogInterface dialog, int whichButton)
-			{	
-//				cbv.setChessBoard();
-				//设置游戏状态
-				//cbv.gameStatus=ChessView.GameStatus_Playing;
-				cbv.gameRestart();
-				cbv.invalidate();
-			}
-		})
-		.setNegativeButton("取消",new DialogInterface.OnClickListener(){
-			public void onClick(DialogInterface dialog, int whichButton)
-			{
-				
-			}
-		})
-		.show();
 	}
 }

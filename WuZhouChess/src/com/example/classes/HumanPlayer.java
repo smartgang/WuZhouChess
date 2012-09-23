@@ -3,12 +3,17 @@
  */
 package com.example.classes;
 
+import android.os.Message;
+
+import com.example.classes.model.DataMessage;
+
 /**
  * @author SmartGang
  *
  */
 public class HumanPlayer extends Player {
 
+	private Movement lastMovement=null;
 	/**
 	 * @param playerName
 	 * @param color
@@ -37,10 +42,25 @@ public class HumanPlayer extends Player {
 				chess.x=targetX;
 				chess.y=targetY;
 				Movement movement=new Movement(c.x,c.y,targetX,targetY);
+				lastMovement=movement;
 				return movement;
 			}
 		}
+		lastMovement=null;
 		return null;
+	}
+
+	@Override
+	public void tellOpponet() {
+		// TODO Auto-generated method stub
+		if(gameCenterHandler!=null&&lastMovement!=null)
+		{
+			DataMessage dMsg=new DataMessage(DataMessage.DATA_TYPE_MOVEMENT, lastMovement, 0);
+			Message msg=new Message();
+			msg.obj=dMsg;
+			msg.what=dMsg.getDataType();
+			gameCenterHandler.sendMessage(msg);
+		}
 	}
 
 }
