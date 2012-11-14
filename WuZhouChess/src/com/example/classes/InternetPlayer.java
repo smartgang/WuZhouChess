@@ -43,11 +43,6 @@ public class InternetPlayer extends Player {
 		return null;
 	}
 
-	@Override
-	public void tellOpponet() {
-		// TODO Auto-generated method stub
-		
-	}
 
 	public void getInternetMovement(Movement movement)
 	{

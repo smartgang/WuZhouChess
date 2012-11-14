@@ -24,7 +24,6 @@ public abstract class Player {
 	public final static int PlayerType_Human=1;
 	public final static int PlayerType_AI=2;
 	public final static int PlayerType_Internet=3;
-	public Handler gameCenterHandler;
 	public ArrayList<Chess> chessArray;
 	protected int color;
 	protected ChessView chessView;
@@ -40,19 +39,6 @@ public abstract class Player {
 	 */
 	public void setChessView(ChessView chessView) {
 		this.chessView = chessView;
-	}
-
-	/**
-	 * @return the gameCenterHandler
-	 */
-	public Handler getGameCenterHandler() {
-		return gameCenterHandler;
-	}
-	/**
-	 * @param gameCenterHandler the gameCenterHandler to set
-	 */
-	public void setGameCenterHandler(Handler gameCenterHandler) {
-		this.gameCenterHandler = gameCenterHandler;
 	}
 
 	private String playerName;
@@ -118,7 +104,6 @@ public abstract class Player {
 	}
 	public abstract Movement move(ChessBoard chessBorad,Chess c, int targetX, int targetY);
 	
-	public abstract void tellOpponet();
 	
 	public void removeChess(Chess c)
 	{

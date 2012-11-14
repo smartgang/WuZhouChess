@@ -600,10 +600,5 @@ public class AIPlayer extends Player {
 		cb.chessBoard[m.fromX][m.fromY]=color;
 	}
 
-	@Override
-	public void tellOpponet() {
-		// TODO Auto-generated method stub
-		
-	}
 
 }

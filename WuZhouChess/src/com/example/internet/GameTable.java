@@ -19,13 +19,14 @@ public class GameTable {
 	final static String PlayerNumKey="PlayerNumKey";
 	public int status;
 	final static String StatusKey="StatusKey";
-	final static int TABLE_STATUS_WAITING=1;
-	final static int TABLE_STATUS_READY=2;
-	final static int TABLE_STATUS_PLAYING=3;
+	public final static int TABLE_STATUS_WAITING=1;
+	public final static int TABLE_STATUS_READY=2;
+	public final static int TABLE_STATUS_PLAYING=3;
 	
-	GameTable()
+	public GameTable()
 	{
-		
+		playerNum=0;
+		status=TABLE_STATUS_WAITING;
 	}
 
 	public GameTable(JSONObject jsonObject) {
@@ -89,6 +90,7 @@ public class GameTable {
 	 * @param player1 the player1 to set
 	 */
 	public void setPlayer1(GamePlayer player1) {
+		if(player1==null)playerNum++;
 		this.player1 = player1;
 	}
 
@@ -96,6 +98,7 @@ public class GameTable {
 	 * @return the player2
 	 */
 	public GamePlayer getPlayer2() {
+		if(player2==null)playerNum++;
 		return player2;
 	}
 
@@ -118,14 +121,6 @@ public class GameTable {
 	 */
 	public void setPlayerNum(int playerNum) {
 		this.playerNum = playerNum;
-	}
-
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-
 	}
 
 	public JSONObject toJSONObject() {

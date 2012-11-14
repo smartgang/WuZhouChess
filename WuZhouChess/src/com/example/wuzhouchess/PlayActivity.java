@@ -18,6 +18,7 @@ import android.os.Message;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.TextView;
 
 /**
  * @author SmartGang
@@ -63,7 +64,17 @@ public class PlayActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.play_view);
 		cbv=(ChessView)findViewById(R.id.chessboard);
-		btnPause=(Button)findViewById(R.id.btnPause);
+//		btnPause=(Button)findViewById(R.id.btnPause);
+		View topHeader;
+		topHeader=(View)findViewById(R.id.main_header);
+		Button btnLeft=(Button)topHeader.findViewById(R.id.top_btn_left);
+		btnLeft.setText("返回");
+//		btnLeft.setVisibility(View.INVISIBLE);
+		btnPause=(Button)topHeader.findViewById(R.id.top_btn_right);
+		btnPause.setText("暂停");
+//		btnRight.setVisibility(View.INVISIBLE);
+		TextView top_textView=(TextView)topHeader.findViewById(R.id.tv_toptitle);
+		top_textView.setText("棋盘");
 		
 		//用户交互消息处理
 		viewHolderHandler=new Handler()
@@ -77,7 +88,7 @@ public class PlayActivity extends Activity {
 				// TODO Auto-generated method stub
 				switch(msg.what)
 				{
-				case ChessView.GameStatus_Over:gameOver();
+				case ChessView.GAME_STATUS_GAMEPLAYING_END:gameOver();
 					break;
 				default:break;
 				}

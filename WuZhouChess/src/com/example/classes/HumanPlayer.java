@@ -50,17 +50,4 @@ public class HumanPlayer extends Player {
 		return null;
 	}
 
-	@Override
-	public void tellOpponet() {
-		// TODO Auto-generated method stub
-		if(gameCenterHandler!=null&&lastMovement!=null)
-		{
-			DataMessage dMsg=new DataMessage(DataMessage.DATA_TYPE_MOVEMENT, lastMovement, 0);
-			Message msg=new Message();
-			msg.obj=dMsg;
-			msg.what=dMsg.getDataType();
-			gameCenterHandler.sendMessage(msg);
-		}
-	}
-
 }

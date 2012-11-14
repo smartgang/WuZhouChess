@@ -29,6 +29,8 @@ public class SignalingMessage extends MessageBody {
 	public final static int SIGNALING_TYPE_IN_TABLE=5;
 	public final static int SIGNALING_TYPE_OUT_TABLE=6;
 	public final static int SIGNALING_TYPE_LOGIN_OUT=7;
+	public final static int SIGNALING_TYPE_INFO_REQ=8;
+	public final static int SIGNALING_TYPE_INFO_RSP=9;
 	InformationMessage information;
 	private final static String InformationKey="InformationKey";
 	/**
@@ -65,6 +67,7 @@ public class SignalingMessage extends MessageBody {
 				case SIGNALING_TYPE_CONNECT:break;
 				case SIGNALING_TYPE_LOGIN_REQ:break;				
 				case SIGNALING_TYPE_LOGIN_OUT:break;
+				case SIGNALING_TYPE_INFO_REQ:break;
 				default:
 //				case SIGNALING_TYPE_LOGIN_RSP://带playerInfo
 //				case SIGNALING_TYPE_LOGIN_ACP://带gameHallInfo
@@ -91,10 +94,11 @@ public class SignalingMessage extends MessageBody {
 		try {
 			signalingType=json.getInt("SingnalingTypeKey");
 			switch(signalingType)
-			{//有三种消息是不携带information
+			{//不携带information的消息
 			case SIGNALING_TYPE_CONNECT:break;
 			case SIGNALING_TYPE_LOGIN_REQ:break;
 			case SIGNALING_TYPE_LOGIN_OUT:break;
+			case SIGNALING_TYPE_INFO_REQ:break;
 			default:
 				information=new InformationMessage(json.getJSONObject(InformationKey));
 				break;

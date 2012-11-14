@@ -17,7 +17,8 @@ import android.util.Log;
 
 /**
  * @author SmartGang
- *
+ * 消息中于，用于管理所有与服务器的通信
+ * 下一步可以考虑采用单例SingleTon的模式来实现
  */
 public class MessageCenter {
 
@@ -42,7 +43,6 @@ public class MessageCenter {
             @Override
             public void run()
             {
-                        //你的socket代码放这里
             	try {
         			//服务器地址和端口号
         			sc=new Socket("192.168.1.102",9999);

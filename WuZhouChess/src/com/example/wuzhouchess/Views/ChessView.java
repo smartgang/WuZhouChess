@@ -38,10 +38,16 @@ public class ChessView extends android.view.View {
 	final public static int ChessColor_White=2;
 	final public static int ChessColor_Yellow=3;
 	//定义游戏的各个状态
-	final public static int GameStatus_Over=4;
-	final public static int GameStatus_Pause=3;
-	final public static int GameStatus_Playing=2;
-	final public static int GameStatus_Ready=1;
+	final static int GAME_STATUS_LOGIN=0;
+	final static int GAME_STATUS_GAMEHALL=1;
+	final static int GAME_STATUS_GAMETABLE=2;
+	final static int GAME_STATUS_GAMEPLAYING_READY=3;
+	final static int GAME_STATUS_GAMEPLAYING_START=4;
+	final static int GAME_STATUS_GAMEPLAYING_PAUSE=5;
+	final static int GAME_STATUS_GAMEPLAYING_RESUME=6;
+	final public static int GAME_STATUS_GAMEPLAYING_END=7;
+	final static int GAME_STATUS_GAMEPLAYING_PLAYING=8;
+	final static int GAME_DATA_MOVMENT=9;
 	
 	final private static String LOG_TGA="ChessView";
 
@@ -62,7 +68,7 @@ public class ChessView extends android.view.View {
 	Chess choseChess=null;
 	Player currentPlayer;
 	private int currentRoundTime;
-	public int gameStatus=GameStatus_Ready;
+	public int gameStatus=GAME_STATUS_GAMEPLAYING_READY;
 	private boolean isTouched;
 	private boolean isWaiting=true;
 
@@ -573,7 +579,7 @@ public class ChessView extends android.view.View {
 		isWaiting=false;
 		timeCounter.stopCounter();
 //		actionThread.stop();
-		gameStatus=GameStatus_Over;
+		gameStatus=GAME_STATUS_GAMEPLAYING_END;
 	}
 	
 	
@@ -581,14 +587,14 @@ public class ChessView extends android.view.View {
 	public void gamePause()
 	{
 		timeCounter.pauseCounter();
-		gameStatus=GameStatus_Pause;
+		gameStatus=GAME_STATUS_GAMEPLAYING_PAUSE;
 	}
 	
 	//游戏结束后重新开始
 	public void gameRestart()
 	{
 		isWaiting=true;
-		gameStatus=GameStatus_Playing;
+		gameStatus=GAME_STATUS_GAMEPLAYING_PLAYING;
 		initialChessBorad();
 		initialCounterAndHandlers();
 		playerBlack.setChessArray(blackChessArray);
@@ -604,7 +610,7 @@ public class ChessView extends android.view.View {
 	public void gameResume()
 	{
 		timeCounter.startCounter();
-		gameStatus=GameStatus_Playing;
+		gameStatus=GAME_STATUS_GAMEPLAYING_PLAYING;
 	}
 	//开始
 	public void gameStart()
@@ -615,7 +621,7 @@ public class ChessView extends android.view.View {
 		timeCounter.start();
 		actionThread.start();
 		viewUpdateThread.start();
-		gameStatus=GameStatus_Playing;
+		gameStatus=GAME_STATUS_GAMEPLAYING_PLAYING;
 	}
 	private Chess getTouchItem(int coordinateX,int coordinateY)
 	{
@@ -660,9 +666,9 @@ public class ChessView extends android.view.View {
 			public void run() {
 				// TODO Auto-generated method stub
 	            try {
-	            	while(gameStatus!=GameStatus_Over)
+	            	while(gameStatus!=GAME_STATUS_GAMEPLAYING_END)
 					{	//每0.1秒更新一次画面，相当于100Hz的刷新频率
-	            		while(gameStatus==GameStatus_Pause)Thread.sleep(500);
+	            		while(gameStatus==GAME_STATUS_GAMEPLAYING_PAUSE)Thread.sleep(500);
 	            		Thread.sleep(100);
 //	            		invalidate();
 	            		updateView(0);
@@ -713,9 +719,9 @@ public class ChessView extends android.view.View {
 			public void run() {
 				// TODO Auto-generated method stub
 	            try {
-					while(gameStatus!=GameStatus_Over)
+					while(gameStatus!=GAME_STATUS_GAMEPLAYING_END)
 					{	//暂停时每0.5秒检测一次
-						while(gameStatus==GameStatus_Pause)Thread.sleep(500);
+						while(gameStatus==GAME_STATUS_GAMEPLAYING_PAUSE)Thread.sleep(500);
 						//等待用户操作,0.2秒检测一次
 						while(isWaiting&&movedChess==null)Thread.sleep(200);
 						Log.d(LOG_TGA,"user ating");
@@ -725,7 +731,17 @@ public class ChessView extends android.view.View {
 						//之后移动棋盘上的内容
 						move(movement.fromX,movement.fromY,movement.toX,movement.toY);
 						//在移动后，将移动的结果知会给对手，Human和AI两类玩家无需操作， InternetPlayer需要发送给对方
-						currentPlayer.tellOpponet();
+						if(playerWhite.getPlayerType()==Player.PlayerType_Internet||
+								playerBlack.getPlayerType()==Player.PlayerType_Internet)
+						{//两个玩有中有一个是Internet而且当前玩家是人类，则要发送movement给对方
+							if(currentPlayer.getPlayerType()==Player.PlayerType_Human)
+							{
+								Message msgMovement=new Message();
+								msgMovement.what=GAME_DATA_MOVMENT;
+								msgMovement.obj=movement;
+								viewHolderHandler.sendMessage(msgMovement);
+							}
+						}
 						eat(new Chess(movement.fromX,movement.fromY,currentPlayer.getColor()),movement.toX,movement.toY);
 						int win=isWin();
 						if(win!=0)
@@ -734,7 +750,7 @@ public class ChessView extends android.view.View {
 							gameOver();
 							Message msg=new Message();
 							msg.obj=gameStatus;
-							msg.what=GameStatus_Over;
+							msg.what=GAME_STATUS_GAMEPLAYING_END;
 							viewHolderHandler.sendMessage(msg);
 						}
 						movedChess=null;
@@ -827,16 +843,21 @@ public class ChessView extends android.view.View {
 	protected void onDraw(Canvas canvas) {
 		// TODO Auto-generated method stub
 		super.onDraw(canvas);	
-		if(gameStatus==GameStatus_Playing)
+		if(gameStatus==GAME_STATUS_GAMEPLAYING_PLAYING)
 		{	
 //			Log.d(LOG_TGA,"onDrawing");
 			drawTotalTime(canvas);
 			drawCurrentRoundTime(canvas);
 			cb.draw(canvas,boardX, boardY,boardGridLength);
-			for(int i=0;i<blackChessArray.size();i++)blackChessArray.get(i).draw(canvas, boardX, boardY, boardGridLength,ChessColor_Black);
-			for(int i=0;i<whiteChessArray.size();i++)whiteChessArray.get(i).draw(canvas,boardX, boardY, boardGridLength,ChessColor_White);
+			if(playerBlack!=null)for(int i=0;i<blackChessArray.size();i++)blackChessArray.get(i).draw(canvas, boardX, boardY, boardGridLength,ChessColor_Black);
+			if(playerWhite!=null)for(int i=0;i<whiteChessArray.size();i++)whiteChessArray.get(i).draw(canvas,boardX, boardY, boardGridLength,ChessColor_White);
 			if(null!=choseChess)choseChess.draw(canvas, boardX, boardY, boardGridLength,  ChessColor_Yellow);						
-		}
+			
+		} 
+	}
+	private void drawPlayerName(Canvas canvas)
+	{
+		
 	}
 	/* (non-Javadoc)
 	 * @see android.view.View#onTouchEvent(android.view.MotionEvent)
@@ -851,7 +872,8 @@ public class ChessView extends android.view.View {
 		isTouched=!isTouched;
 		if(isTouched==false)return true;
 		Log.d(LOG_TGA,"onTouchEvent");
-		if(currentPlayer.getPlayerType()==Player.PlayerType_AI)return true;
+		if(currentPlayer.getPlayerType()==Player.PlayerType_AI
+				||currentPlayer.getPlayerType()==Player.PlayerType_Internet)return true;
 			Chess c=getTouchItem((int)event.getX(),(int)event.getY());
 			//没有选中位置，则直接返回
 			if(c==null||c.x>4||c.y>4)return true;
@@ -875,12 +897,10 @@ public class ChessView extends android.view.View {
 				if(true==isMovable(choseChess, c.x,c.y))
 				{
 					Log.d(LOG_TGA,"onTouchEvent moving");
-					movedChess=new Chess(choseChess.x,choseChess.y,choseChess.color);
+					Chess mc=new Chess(choseChess.x,choseChess.y,choseChess.color);
 					choseChess=null;
 					//通过action线程，用户已完成移动
-					moveTargetX=c.x;
-					moveTargetY=c.y;
-					isWaiting=false;
+					setMovement(mc,c.x,c.y);
 				}
 				else if(cb.chessBoard[c.x][c.y]==choseChess.color)//第二次按下时移动失败，则要判断是否选中了其他的棋子
 				{
@@ -892,6 +912,14 @@ public class ChessView extends android.view.View {
 			return true;
 //		}
 //		return false;
+	}
+	//设置用户的移动内容，该函数同时提供给InternetGameActivity调用，以传入InternetPlayer的行动
+	public void setMovement(Chess mc,int tX,int tY)
+	{
+		movedChess=mc;
+		moveTargetX=tX;
+		moveTargetY=tY;
+		isWaiting=false;
 	}
 	public void setChessBoard()
 	{
@@ -916,7 +944,21 @@ public class ChessView extends android.view.View {
 		playerWhite.setChessArray(whiteChessArray);
 		currentPlayer=playerBlack;
 	}
-
+	//重载setPlayer函数，提供单个用户的载入
+	public void setPlayer(Player player, int color)
+	{
+		if(color==Player.ChessColor_White)
+		{
+			playerWhite=player;
+			playerWhite.setChessArray(whiteChessArray);
+		}
+		else 
+		{
+			playerBlack=player;
+			playerBlack.setChessArray(blackChessArray);
+		}
+	}
+	
 	/**
 	 * @param viewHolerHandler the viewHolerHandler to set
 	 */

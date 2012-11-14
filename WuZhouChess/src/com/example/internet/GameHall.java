@@ -13,6 +13,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 
+
 /**
  * @author SmartGang
  *
@@ -38,6 +39,7 @@ public class GameHall {
 	 */
 	public GameHall(JSONObject json) {
 //		super();
+		tableList=new ArrayList<GameTable>();
 		try {
 			name=json.getString(NameKey);
 			ID=json.getInt(IDKey);

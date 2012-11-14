@@ -22,6 +22,9 @@ public class DataMessage extends MessageBody {
 	public final static int DATA_TYPE_CONTROL_RESUME=3;
 	public final static int DATA_TYPE_CONTROL_LOSE=4;
 	public final static int DATA_TYPE_CONTROL_WIN=5;
+	public final static int DATA_TYPE_CONTROL_READY=6;
+	public final static int DATA_TYPE_CONTROL_START=7;
+	
 	public int dataType;
 	final static String DataTypeKey="dataTypeKey";
 	Movement movement;
@@ -29,29 +32,11 @@ public class DataMessage extends MessageBody {
 	final static String MovementKey_FromeY="movementKey_FromeY";
 	final static String MovementKey_ToX="movementKey_ToX";
 	final static String MovementKey_ToY="movementKey_ToY";
-	int control;
-	final static String ControlKey="controlKey";
+//	int control;
+//	final static String ControlKey="controlKey";
 	public DataMessage(JSONObject json) {
 		// TODO Auto-generated constructor stub
-		messageType=MessageBody.MESSAGE_TYPE_DATA;
-		try {
-			dataType=json.getInt(DataTypeKey);
-			if(dataType==DATA_TYPE_MOVEMENT)
-			{
-				int fromX=json.getInt(MovementKey_FromeX);
-				int fromY=json.getInt(MovementKey_FromeY);
-				int toX=json.getInt(MovementKey_ToX);
-				int toY=json.getInt(MovementKey_ToY);
-				movement=new Movement(fromX,fromY,toX,toY);
-			}
-			else
-			{
-				control=json.getInt(ControlKey);
-			}
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		decodeFromJSON(json);
 	}
 
 	/**
@@ -59,11 +44,12 @@ public class DataMessage extends MessageBody {
 	 * @param movement
 	 * @param control
 	 */
-	public DataMessage(int dataType, Movement movement, int control) {
+	public DataMessage(int dataType, Movement movement) {
 		super();
 		this.dataType = dataType;
 		this.movement = movement;
-		this.control = control;
+//		this.control = control;
+		messageType=MessageBody.MESSAGE_TYPE_DATA;
 	}
 	/**
 	 * @return the movement
@@ -85,6 +71,7 @@ public class DataMessage extends MessageBody {
 	@Override
 	JSONObject codeToJSONObject() {
 		// TODO Auto-generated method stub
+		messageType=MessageBody.MESSAGE_TYPE_DATA;
 		JSONObject json=new JSONObject();
 		try {
 			json.put(typeKey, messageType);
@@ -96,10 +83,10 @@ public class DataMessage extends MessageBody {
 				json.put(MovementKey_ToX, movement.toX);
 				json.put(MovementKey_ToY, movement.toY);
 			}
-			else
-			{
-				json.put(ControlKey, control);
-			}
+//			else
+//			{
+//				json.put(ControlKey, control);
+//			}
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -127,6 +114,7 @@ public class DataMessage extends MessageBody {
 	@Override
 	MessageBody decodeFromJSON(JSONObject json) {
 		// TODO Auto-generated method stub
+		messageType=MessageBody.MESSAGE_TYPE_DATA;
 		try {
 			dataType=json.getInt(DataTypeKey);
 			if(dataType==DATA_TYPE_MOVEMENT)
@@ -137,10 +125,10 @@ public class DataMessage extends MessageBody {
 				int toY=json.getInt(MovementKey_ToY);
 				movement=new Movement(fromX,fromY,toX,toY);
 			}
-			else
-			{
-				control=json.getInt(ControlKey);
-			}
+//			else
+//			{
+//				control=json.getInt(ControlKey);
+//			}
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
