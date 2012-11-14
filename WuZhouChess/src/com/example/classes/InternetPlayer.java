@@ -3,7 +3,6 @@
  */
 package com.example.classes;
 
-import android.os.Handler;
 
 /**
  * @author SmartGang

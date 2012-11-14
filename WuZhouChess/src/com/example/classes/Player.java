@@ -8,9 +8,6 @@ import java.util.ArrayList;
 import com.example.wuzhouchess.Views.ChessView;
 
 
-import android.os.Handler;
-import android.text.format.Time;
-
 /**
  * @author SmartGang
  *

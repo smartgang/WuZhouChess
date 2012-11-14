@@ -3,7 +3,6 @@
  */
 package com.example.wuzhouchess;
 
-import com.example.classes.Chess;
 import com.example.classes.HumanPlayer;
 import com.example.classes.InternetPlayer;
 import com.example.classes.Player;

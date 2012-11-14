@@ -3,9 +3,7 @@
  */
 package com.example.classes;
 
-import android.os.Message;
 
-import com.example.classes.model.DataMessage;
 
 /**
  * @author SmartGang
