@@ -20,7 +20,7 @@ public class ChessBoard{
 	final public static int GridEmpty=0;
 	public int[][] chessBoard;
 	
-	//初始化棋盘
+	//初始化棋盘,默认上黑下白
 	public ChessBoard() {
 		chessBoard=new int[5][5];
 		for(int i=0;i<5;i++)
@@ -28,6 +28,17 @@ public class ChessBoard{
 			chessBoard[i][0]=ChessColor_Black;
 			chessBoard[i][4]=ChessColor_White;
 		}
+	}
+	
+	public boolean move(Movement movement)
+	{
+		int color =chessBoard[movement.fromX][movement.fromY];
+		//在这里做一下移动判断，失败返回false
+		if(color==GridEmpty)return false;
+		if(chessBoard[movement.toX][movement.toY]!=GridEmpty)return false;
+		chessBoard[movement.fromX][movement.fromY]=GridEmpty;
+		chessBoard[movement.toX][movement.toY]=color;
+		return true;
 	}
 	
 	//在画布上画出自己
@@ -54,7 +65,7 @@ public class ChessBoard{
 		canvas.drawLine(boardX+boardGridLength_4, boardY+boardGridLength_2, boardX+boardGridLength_2, boardY+boardGridLength_4, p);
 	}
 
-	//判断当前位置是否已经有棋子占用
+	//判断当前位置是否已经有棋子占用,如果已经被占用，则返回false
 	public boolean isOccupied(int x, int y)
 	{
 		if(x<0||x>4)return false;

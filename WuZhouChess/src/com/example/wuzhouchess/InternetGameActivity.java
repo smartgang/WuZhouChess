@@ -3,8 +3,11 @@
  */
 package com.example.wuzhouchess;
 
+import com.example.classes.AIPlayer;
+import com.example.classes.Chess;
 import com.example.classes.HumanPlayer;
 import com.example.classes.InternetPlayer;
+import com.example.classes.Movement;
 import com.example.classes.Player;
 import com.example.classes.model.DataMessage;
 import com.example.classes.model.InformationMessage;
@@ -14,7 +17,7 @@ import com.example.classes.model.SignalingMessage;
 import com.example.internet.GameHall;
 import com.example.internet.GamePlayer;
 import com.example.internet.GameTable;
-import com.example.wuzhouchess.Views.ChessView;
+import com.example.wuzhouchess.Views.ChessBoardView;
 
 import android.app.Activity;
 import android.content.Context;
@@ -41,7 +44,12 @@ import android.widget.TextView;
  */
 public class InternetGameActivity extends Activity{
 
+	//用于从messageCenter接收消息，并在处理过程中将消息传递到各个实体中
 	Handler receivingHandler;
+	//消息中心，与server连接进行消息交互
+	MessageCenter messageCenter;
+	
+	//用于控制游戏界面状态，根据不同的消息调整不同的状态
 	Handler gameStatusHandler;
 	final static int GAME_STATUS_LOGIN=0;
 	final static int GAME_STATUS_GAMEHALL=1;
@@ -54,9 +62,8 @@ public class InternetGameActivity extends Activity{
 	final static int GAME_STATUS_GAMEPLAYING_PLAYING=8;
 	final static int GAME_DATA_MOVMENT=9;
 	
-	MessageCenter messageCenter;
-	InternetPlayer internetPlayer;
-	private int internetStatus;
+	//当前联网状态
+	private int internetStatus;	
 	final static int INTERNET_STATUS_INITIAL=0;
 	final static int INTERNET_STATUS_CONNECT=1;
 	final static int INTERNET_STATUS_LOGIN=2;
@@ -64,9 +71,22 @@ public class InternetGameActivity extends Activity{
 	final static int INTERNET_STATUS_IN_TABLE=4;
 	final static int INTERNET_STATUS_READY=5;
 	final static int INTERNET_STATUS_PLAYING=6;
-	GamePlayer gamePlayer;
+	
+	//游戏元素：本地玩家，远程玩家，游戏大厅和游戏桌
+	GamePlayer localPlayer;
+	GamePlayer remotePlayer;
 	GameHall gameHall;
 	GameTable gameTable;
+	
+	Player localChessBoardPlayer;
+	Player remoteChessBoardPlayer;
+	
+	//游戏实体 chessboardview
+	ChessBoardView cbv;
+	//用于从cvb接收游戏消息
+	Handler cbvHandler;
+	//ChattingView chattingView;
+	//InformationView informationView;
 	
 	/* (non-Javadoc)
 	 * @see android.app.Activity#onCreate(android.os.Bundle)
@@ -76,6 +96,11 @@ public class InternetGameActivity extends Activity{
 		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
 		initHandlers();
+		
+		//启动cbv
+		cbv=new ChessBoardView(this,cbvHandler);
+		cbv.startHeartBeat();
+		
 		internetStatus=INTERNET_STATUS_INITIAL;
 		
 		messageCenter=new MessageCenter();
@@ -98,8 +123,8 @@ public class InternetGameActivity extends Activity{
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
 				SignalingMessage sMsg=new SignalingMessage(SignalingMessage.SIGNALING_TYPE_CONNECT, null);
-				gamePlayer=new GamePlayer();
-				gamePlayer.name=etName.getText().toString();
+				localPlayer=new GamePlayer();
+				localPlayer.name=etName.getText().toString();
 				messageCenter.sendMessag(sMsg);
 				
 			}
@@ -165,7 +190,54 @@ public class InternetGameActivity extends Activity{
 					break;
 				case GAME_STATUS_GAMEPLAYING_START:
 					//添加游戏开始代码
+					Message msg2=new Message();
+					msg2.what=ChessBoardView.ACTION_MSG_START;
+					if(cbv!=null)ChessBoardView.actionHandler.sendMessage(msg2);
 					break;
+				}
+			}
+			
+		};
+		
+		//用于从chessBoardView接收消息,将消息转发出去
+		cbvHandler=new Handler()
+		{
+
+			/* (non-Javadoc)
+			 * @see android.os.Handler#handleMessage(android.os.Message)
+			 */
+			@Override
+			public void handleMessage(Message msg) {
+				// TODO Auto-generated method stub
+				DataMessage dmsg=new DataMessage(DataMessage.DATA_TYPE_CONTROL_RESUME,null);
+				switch(msg.what)
+				{
+				case ChessBoardView.ACTION_MSG_MOVEMENT://调用移动棋子函数
+					dmsg.setDataType(DataMessage.DATA_TYPE_MOVEMENT);
+					dmsg.setMovement((Movement)msg.obj);
+					messageCenter.sendMessag(dmsg);
+					break;
+				case ChessBoardView.ACTION_MSG_START:
+					dmsg.setDataType(DataMessage.DATA_TYPE_CONTROL_START);
+					messageCenter.sendMessag(dmsg);
+					break;
+				case ChessBoardView.ACTION_MSG_PAUSE:
+					dmsg.setDataType(DataMessage.DATA_TYPE_CONTROL_PAUSE);
+					messageCenter.sendMessag(dmsg);
+					break;
+				case ChessBoardView.ACTION_MSG_RESUME:
+					dmsg.setDataType(DataMessage.DATA_TYPE_CONTROL_RESUME);
+					messageCenter.sendMessag(dmsg);
+					break;
+				case ChessBoardView.ACTION_MSG_OVER:
+					dmsg.setDataType(DataMessage.DATA_TYPE_CONTROL_LOSE);
+					messageCenter.sendMessag(dmsg);
+					break;
+				case ChessBoardView.ACTION_MSG_RESTART:
+					dmsg.setDataType(DataMessage.DATA_TYPE_CONTROL_START);
+					messageCenter.sendMessag(dmsg);
+					break;
+					default:break;				
 				}
 			}
 			
@@ -181,7 +253,7 @@ public class InternetGameActivity extends Activity{
 		case SignalingMessage.SIGNALING_TYPE_LOGIN_REQ:
 			if(internetStatus==INTERNET_STATUS_INITIAL)
 			{
-				InformationMessage playerMsg=new InformationMessage(InformationMessage.INFORMATION_TYPE_PLAYER,null,null,gamePlayer);
+				InformationMessage playerMsg=new InformationMessage(InformationMessage.INFORMATION_TYPE_PLAYER,null,null,localPlayer);
 				sMsg=new SignalingMessage(SignalingMessage.SIGNALING_TYPE_LOGIN_RSP, playerMsg);
 				messageCenter.sendMessag(sMsg);
 			}
@@ -198,10 +270,13 @@ public class InternetGameActivity extends Activity{
 			gameStatusHandler.sendMessage(msg2);
 			break;
 		case SignalingMessage.SIGNALING_TYPE_IN_TABLE:
-			//收到进入table的消息
-			GameTable table=sMsg.getInformation().getGameTable();
-			if(table.name.equals(gameTable.name)==false)return;
-			gameTable=table;
+			//TODO:别人进入到本地建立的gameTable,带的是player信息
+			//1.取出player信息,保存到remotePlayer中
+			//3.创建remoteChessBoardPlayer,设置到cbv中
+			remotePlayer=sMsg.getInformation().getPlayer();
+			remoteChessBoardPlayer=new InternetPlayer(remotePlayer.name, remotePlayer.color, Player.PlayerType_Internet);
+    		cbv.setPlayer(remoteChessBoardPlayer);
+    		
 			Message msg3=new Message();
 			msg3.obj=0;
 			msg3.what=GAME_STATUS_GAMETABLE;
@@ -218,7 +293,10 @@ public class InternetGameActivity extends Activity{
 		{
 		case DataMessage.DATA_TYPE_MOVEMENT:
 			//通过调用函数的形式将接收到的移动信息传递给player
-			internetPlayer.getInternetMovement(dMsg.getMovement());
+			Message msg2=new Message();
+			msg2.what=ChessBoardView.ACTION_MSG_MOVEMENT;
+			msg2.obj=dMsg.getMovement();
+			if(cbv!=null)ChessBoardView.actionHandler.sendMessage(msg2);
 			break;
 		case DataMessage.DATA_TYPE_CONTROL_READY:
 			//接收到对方发来的准备消息
@@ -303,10 +381,18 @@ public class InternetGameActivity extends Activity{
 				// TODO Auto-generated method stub
 				//发送table消息给服务器，并进入tableView
 				gameTable=new GameTable();
-				gameTable.setName(gamePlayer.name);
-				gameTable.setID(gamePlayer.ID);
-				gameTable.setPlayer1(gamePlayer);
-				InformationMessage tableMsg=new InformationMessage(InformationMessage.INFORMATION_TYPE_TABLE,null,gameTable,gamePlayer);
+				gameTable.setName(localPlayer.name);
+				gameTable.setID(localPlayer.ID);
+				gameTable.setPlayer1(localPlayer);
+				
+				if(cbv!=null)
+				{
+					localChessBoardPlayer=new HumanPlayer(localPlayer.name, Player.ChessColor_Black, Player.PlayerType_Human);
+					localPlayer.color=Player.ChessColor_Black;
+					cbv.setPlayer(localChessBoardPlayer);
+				}
+				
+				InformationMessage tableMsg=new InformationMessage(InformationMessage.INFORMATION_TYPE_TABLE,null,gameTable,null);
 				SignalingMessage sMsg=new SignalingMessage(SignalingMessage.SIGNALING_TYPE_CREATE_TABLE, tableMsg);
 				messageCenter.sendMessag(sMsg);
 				Message msg2=new Message();
@@ -322,11 +408,26 @@ public class InternetGameActivity extends Activity{
         	@Override
         	public void onItemClick(AdapterView<?> arg0, View arg1,int arg2, long arg3)
         	{
+        		//TODO:进别入的gameTable
+        		//1.将自动设进gameTable的player2中
+        		//2.将gameTable中的player1读出设置为remotePlayer，以及remoteChessBoardPlayer
+        		//3.新建player将自己设到localChessBoardPlayer中
+        		//4.将player设置到cbv中
+        		//5.发送进入table的消息给服务器
         		gameTable=gameHall.tableList.get(arg2);
         		if(gameTable.playerNum==2)return ;
         		//是进入别人的table，所以要将自己设置为player2
-        		gameTable.setPlayer2(gamePlayer);
-				InformationMessage tableMsg=new InformationMessage(InformationMessage.INFORMATION_TYPE_TABLE,null,gameTable,gamePlayer);
+        		gameTable.setPlayer2(localPlayer);
+        		remotePlayer=gameTable.getPlayer1();//将remotePlayer读出
+        		if(remotePlayer.color==Player.ChessColor_Black)localPlayer.color=Player.ChessColor_White;
+        		else localPlayer.color=Player.ChessColor_Black;
+        		remoteChessBoardPlayer=new InternetPlayer(remotePlayer.name, remotePlayer.color, Player.PlayerType_Internet);
+        		localChessBoardPlayer=new HumanPlayer(localPlayer.name, localPlayer.color, Player.PlayerType_Human);
+				cbv.setPlayer(remoteChessBoardPlayer);
+				cbv.setPlayer(localChessBoardPlayer);
+				
+        		gameTable.playerNum=2;       		
+				InformationMessage tableMsg=new InformationMessage(InformationMessage.INFORMATION_TYPE_TABLE,null,gameTable,null);
 				SignalingMessage sMsg=new SignalingMessage(SignalingMessage.SIGNALING_TYPE_IN_TABLE, tableMsg);
 				messageCenter.sendMessag(sMsg);
 				Message msg2=new Message();
@@ -339,97 +440,7 @@ public class InternetGameActivity extends Activity{
 	
 	private void gotoGameTableView()
 	{
-		Log.d("GameTableView","inTableView");
-		setContentView(R.layout.play_view);
-		//初始化topView
-		View topHeader;
-		topHeader=(View)findViewById(R.id.main_header);
-		Button btnLeft=(Button)topHeader.findViewById(R.id.top_btn_left);
-		btnLeft.setText("返回");
-//		btnLeft.setVisibility(View.INVISIBLE);
-		Button btnRight=(Button)topHeader.findViewById(R.id.top_btn_right);
-		btnRight.setText("开始");
-//		btnRight.setVisibility(View.INVISIBLE);
-		TextView top_textView=(TextView)topHeader.findViewById(R.id.tv_toptitle);
-		TextView tvPlayer1=(TextView)findViewById(R.id.tvPlayerBlack);
-		TextView tvPlayer2=(TextView)findViewById(R.id.tvPlayerWhite);
-		
-		Handler viewHoldHandler;//与chessView通信的handler
-		
-		ChessView cbv=(ChessView)findViewById(R.id.chessboard);
-		
-		Player selfPlayer;
-		Player opponentPlayer;
-		if(gameTable.player1.name.equals(gamePlayer.name))
-		{
-			//第一位玩家是本地用户
-			selfPlayer=new HumanPlayer(gamePlayer.name,Player.ChessColor_Black,Player.PlayerType_Human);
-			if(gameTable.player2!=null)opponentPlayer=new InternetPlayer(gameTable.player2.name,Player.ChessColor_White,Player.PlayerType_Internet);
-		}
-		else
-		{
-			//第二位玩家是本地用户
-			selfPlayer=new HumanPlayer(gamePlayer.name,Player.ChessColor_White,Player.PlayerType_Human);
-			opponentPlayer=new InternetPlayer(gameTable.player1.name,Player.ChessColor_Black,Player.PlayerType_Internet);			
-		}
-		
-		//与chessBoard沟通的handler
-		viewHoldHandler=new Handler()
-		{
-
-			/* (non-Javadoc)
-			 * @see android.os.Handler#handleMessage(android.os.Message)
-			 */
-			@Override
-			public void handleMessage(Message msg) {
-				// TODO Auto-generated method stub
-				switch(msg.what)
-				{
-				case ChessView.GAME_STATUS_GAMEPLAYING_END:;
-					break;
-				default:break;
-				}
-			}
-			
-		};
-		
-		//左键，用来退出和比赛时认输
-		btnLeft.setOnClickListener(new OnClickListener()
-		{
-
-			@Override
-			public void onClick(View v) {
-				// TODO Auto-generated method stub
-				
-			}
-			
-		});
-		
-		//右键，用来开始游戏和暂停
-		btnRight.setOnClickListener(new OnClickListener(){
-
-			@Override
-			public void onClick(View v) {
-				// TODO Auto-generated method stub
-				if(gameTable.status==GameTable.TABLE_STATUS_WAITING)
-				{//等待状态下，进入准备状态
-					//发送准备消息给服务器，并通过gameStatusHandler更新画面状态
-					gameTable.status=GameTable.TABLE_STATUS_READY;
-					DataMessage readyMessage=new DataMessage(DataMessage.DATA_TYPE_CONTROL_READY,null);
-					messageCenter.sendMessag(readyMessage);
-					Message msg1=new Message();
-					msg1.obj=0;
-					msg1.what=GAME_STATUS_GAMEPLAYING_READY;
-					gameStatusHandler.sendMessage(msg1);
-				}
-			}			
-		});
-		//设置显示玩家信息,本地用户始终显示在下方，联网用户始终显示在上方
-		tvPlayer1.setText(gamePlayer.name);
-		if(gameTable.playerNum==2)tvPlayer2.setText(gameTable.player2.name);
-		
-		cbv.setViewHolderHandler(viewHoldHandler);
-		
+		setContentView(cbv);
 	}
 
 	class TableListAdapter extends BaseAdapter

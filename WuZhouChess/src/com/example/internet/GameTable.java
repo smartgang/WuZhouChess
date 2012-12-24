@@ -34,15 +34,11 @@ public class GameTable {
 		try {
 			name=jsonObject.getString(NameKey);
 			ID=jsonObject.getInt(IDKey);
-			player1=new GamePlayer();
-			player1.name=jsonObject.getString(Player1Key);
+			JSONObject jsonPlayer1=jsonObject.optJSONObject(Player1Key);
+			if(jsonPlayer1!=null)player1=new GamePlayer(jsonPlayer1);
 			playerNum=jsonObject.getInt(PlayerNumKey);
-			if(playerNum==2)
-			{
-				player2=new GamePlayer();
-				//如果player2还没有人，则默认为"null"
-				player2.name=jsonObject.optString(Player2Key, "null");
-			}
+			JSONObject jsonPlayer2=jsonObject.optJSONObject(Player2Key);
+			if(jsonPlayer2!=null)player2=new GamePlayer(jsonPlayer2);
 			status=jsonObject.getInt(StatusKey);	
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
@@ -98,7 +94,6 @@ public class GameTable {
 	 * @return the player2
 	 */
 	public GamePlayer getPlayer2() {
-		if(player2==null)playerNum++;
 		return player2;
 	}
 
@@ -106,6 +101,7 @@ public class GameTable {
 	 * @param player2 the player2 to set
 	 */
 	public void setPlayer2(GamePlayer player2) {
+		if(player2==null)playerNum++;
 		this.player2 = player2;
 	}
 
@@ -129,15 +125,14 @@ public class GameTable {
 		try {
 			json.put(NameKey, name);
 			json.put(IDKey, ID);
-			json.put(Player1Key, player1.name);
+			if(player1!=null)json.put(Player1Key, player1.toJSONObject());
 			json.put(PlayerNumKey, playerNum);
-			if(playerNum==2)json.put(Player2Key, player2.name);
+			if(player2!=null)json.put(Player2Key, player2.toJSONObject());
 			json.put(StatusKey, status);
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 		return json;
 	}
 }

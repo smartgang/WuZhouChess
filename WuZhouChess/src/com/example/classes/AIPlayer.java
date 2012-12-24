@@ -458,8 +458,10 @@ public class AIPlayer extends Player {
 		return eatCount;
 	}
 	
-	private Movement getBestMovement()
+	public Movement getBestMovement(ChessBoard chessBoard)
 	{
+		copyChessBoard(chessBoard);
+		getOpponentChessList();
 		Movement bestMovement=null;
 		Movement tempMovement=null;
 		int bestMovementRate=0;//用来保存当前最好步骤的得分
@@ -494,6 +496,7 @@ public class AIPlayer extends Player {
 	//获取可移动的列表，返回移动数
 	private int getMovementList()
 	{
+		
 		movementList.clear();
 		int chessCount=chessArray.size();
 		for(int i=0;i<chessCount;i++)
@@ -567,23 +570,29 @@ public class AIPlayer extends Player {
 	@Override
 	public Movement move(ChessBoard chessBoard, Chess c, int targetX, int targetY) {
 		// TODO Auto-generated method stub
-		copyChessBoard(chessBoard);
-		getOpponentChessList();
-		Movement m=getBestMovement();
-		if(m!=null)
-		{
-			Chess temp;
+		//11.19刷新ChessBoardView,将move函数进行改写，只执行，AIpalyer根据getBestMovment来决定走棋
+//		copyChessBoard(chessBoard);
+//		getOpponentChessList();
+//		Movement m=getBestMovement();
+//		if(c!=null)
+//		{
+//			Chess temp;
+		Movement movement=null;
 			for(int i=0;i<chessArray.size();i++)
 			{	
-				temp=chessArray.get(i);
-				if(temp.x==m.fromX&temp.y==m.fromY)
+				Chess chess=chessArray.get(i);
+				if(chess.x==c.x&&
+						chess.y==c.y&&
+						chess.color==c.color)
 				{
-					temp.x=m.toX;
-					temp.y=m.toY;
+					chess.x=targetX;
+					chess.y=targetY;
+					movement=new Movement(c.x,c.y,targetX,targetY);
 				}
 			}
-		}
-		return m;
+		return movement;
+//		}
+//		return m;
 	}
 
 	private void move(Movement m)

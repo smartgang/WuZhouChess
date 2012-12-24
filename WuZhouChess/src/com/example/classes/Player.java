@@ -25,6 +25,9 @@ public abstract class Player {
 	protected int color;
 	protected ChessView chessView;
 	
+	private String playerName;
+	private int playerType;
+	private int totalPlayTime;
 	/**
 	 * @return the chessView
 	 */
@@ -38,10 +41,6 @@ public abstract class Player {
 		this.chessView = chessView;
 	}
 
-	private String playerName;
-	private int playerType;
-	private int totalPlayTime;
-
 	/**
 	 * @param playerName
 	 * @param color
@@ -52,6 +51,24 @@ public abstract class Player {
 		this.playerName = playerName;
 		this.color = color;
 		this.playerType = playerType;
+	}
+	
+	
+	
+	/**
+	 * @param playerName
+	 * @param playerType
+	 */
+	public Player(String playerName, int playerType) {
+		super();
+		this.playerName = playerName;
+		this.playerType = playerType;
+	}
+	/**
+	 * @param color the color to set
+	 */
+	public void setColor(int color) {
+		this.color = color;
 	}
 	public void addChess(Chess c)
 	{
