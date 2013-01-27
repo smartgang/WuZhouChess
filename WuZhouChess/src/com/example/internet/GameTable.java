@@ -135,4 +135,12 @@ public class GameTable {
 		}
 		return json;
 	}
+	
+	public void playerOut(GamePlayer player)
+	{
+		if(player1.name.equals(player.name))
+			player1=null;
+		else player2=null;
+		playerNum--;	
+	}
 }

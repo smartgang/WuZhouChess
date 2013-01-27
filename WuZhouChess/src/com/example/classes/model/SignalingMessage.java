@@ -31,6 +31,8 @@ public class SignalingMessage extends MessageBody {
 	public final static int SIGNALING_TYPE_LOGIN_OUT=7;
 	public final static int SIGNALING_TYPE_INFO_REQ=8;
 	public final static int SIGNALING_TYPE_INFO_RSP=9;
+	public final static int SIGNALING_TYPE_INFO_EXIT=10;
+	public final static int SIGNALING_TYPE_IFNO_EXIT_RSP=11;
 	InformationMessage information;
 	private final static String InformationKey="InformationKey";
 	/**

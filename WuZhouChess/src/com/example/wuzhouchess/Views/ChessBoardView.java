@@ -1104,4 +1104,17 @@ public class ChessBoardView extends View {
 		}
 		return true;
 	}
+	//供外部调用，传入对手退出的信息
+	public void opponentOut()
+	{
+		if(gameStatus!=GAME_STATUS_OVER)
+		{//如果游戏没有结束，对方退出，则判已方胜
+			Message msgWin=new Message();
+			msgWin.what=ACTION_MSG_OVER;
+			msgWin.obj=ACTION_MSG_VITORY;
+			actionHandler.sendMessage(msgWin);
+		}
+		playerUp=null;
+		opponentPlayer=null;
+	}
 }

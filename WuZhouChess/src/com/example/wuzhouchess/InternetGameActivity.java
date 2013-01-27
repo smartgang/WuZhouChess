@@ -61,6 +61,7 @@ public class InternetGameActivity extends Activity{
 	final static int GAME_STATUS_GAMEPLAYING_END=7;
 	final static int GAME_STATUS_GAMEPLAYING_PLAYING=8;
 	final static int GAME_DATA_MOVMENT=9;
+	final static int GAME_STATUS_GAMEPLAYING_EXIT=10;
 	
 	//当前联网状态
 	private int internetStatus;	
@@ -237,6 +238,14 @@ public class InternetGameActivity extends Activity{
 					dmsg.setDataType(DataMessage.DATA_TYPE_CONTROL_START);
 					messageCenter.sendMessag(dmsg);
 					break;
+				case ChessBoardView.ACTION_MSG_EXIT:
+					//游戏界面中选择退出游戏:
+					//1.将退出消息发送给服务器（EXIT)
+					//2.服务器收到后近回EXIT_RSP，携带table list
+					//3.在Singaling中处理table list，刷新进入到GameTable界面，此处不做处理
+					SignalingMessage sMsg=new SignalingMessage(SignalingMessage.SIGNALING_TYPE_INFO_EXIT,null);
+					messageCenter.sendMessag(sMsg);
+					break;
 					default:break;				
 				}
 			}
@@ -281,6 +290,24 @@ public class InternetGameActivity extends Activity{
 			msg3.obj=0;
 			msg3.what=GAME_STATUS_GAMETABLE;
 			gameStatusHandler.sendMessage(msg3);
+			break;
+		case SignalingMessage.SIGNALING_TYPE_INFO_EXIT:
+			//TODO:收到EXIT消息，表示是游戏对手退出
+			//1.调用chessBoardView中的oppoentOut函数通知游戏界面
+			cbv.opponentOut();
+			gameTable.playerOut(remotePlayer);
+			remotePlayer=null;
+			break;
+		case SignalingMessage.SIGNALING_TYPE_IFNO_EXIT_RSP:
+			//TODO:收到EXIT_RSP消息，表示服务器接收了退出请求,消息附带GameHall信息
+			//1.刷新GameHall信息
+			//2.进入GameHall界面
+			gameTable=null;
+			gameHall=sMsg.getInformation().getGameHall();
+			Message msg4=new Message();
+			msg4.obj=0;
+			msg4.what=GAME_STATUS_GAMEHALL;
+			gameStatusHandler.sendMessage(msg4);
 			break;
 		default:break;
 		}
@@ -416,9 +443,17 @@ public class InternetGameActivity extends Activity{
         		//5.发送进入table的消息给服务器
         		gameTable=gameHall.tableList.get(arg2);
         		if(gameTable.playerNum==2)return ;
-        		//是进入别人的table，所以要将自己设置为player2
-        		gameTable.setPlayer2(localPlayer);
-        		remotePlayer=gameTable.getPlayer1();//将remotePlayer读出
+        		//是进入别人的table，要判断已存在的人是player1还是player2
+        		if(gameTable.player1==null)
+        		{
+        			gameTable.setPlayer1(localPlayer);
+        			remotePlayer=gameTable.getPlayer2();
+        		}
+        		else
+        		{
+        			gameTable.setPlayer2(localPlayer);
+        			remotePlayer=gameTable.getPlayer1();//将remotePlayer读出
+        		}        		
         		if(remotePlayer.color==Player.ChessColor_Black)localPlayer.color=Player.ChessColor_White;
         		else localPlayer.color=Player.ChessColor_Black;
         		remoteChessBoardPlayer=new InternetPlayer(remotePlayer.name, remotePlayer.color, Player.PlayerType_Internet);
