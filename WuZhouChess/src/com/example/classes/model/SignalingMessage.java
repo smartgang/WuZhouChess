@@ -70,12 +70,13 @@ public class SignalingMessage extends MessageBody {
 				case SIGNALING_TYPE_LOGIN_REQ:break;				
 				case SIGNALING_TYPE_LOGIN_OUT:break;
 				case SIGNALING_TYPE_INFO_REQ:break;
+				case SIGNALING_TYPE_OUT_TABLE:break;
+				case SIGNALING_TYPE_INFO_EXIT:break;
 				default:
 //				case SIGNALING_TYPE_LOGIN_RSP://带playerInfo
 //				case SIGNALING_TYPE_LOGIN_ACP://带gameHallInfo
 //				case SIGNALING_TYPE_CREATE_TABLE://带tableInfo
 //				case SIGNALING_TYPE_IN_TABLE://带tableInfo
-//				case SIGNALING_TYPE_OUT_TABLE://带tableInfo
 					json.put(InformationKey, information.codeToJSONObject());
 					break;
 			}
@@ -101,6 +102,8 @@ public class SignalingMessage extends MessageBody {
 			case SIGNALING_TYPE_LOGIN_REQ:break;
 			case SIGNALING_TYPE_LOGIN_OUT:break;
 			case SIGNALING_TYPE_INFO_REQ:break;
+			case SIGNALING_TYPE_OUT_TABLE:break;
+			case SIGNALING_TYPE_INFO_EXIT:break;
 			default:
 				information=new InformationMessage(json.getJSONObject(InformationKey));
 				break;

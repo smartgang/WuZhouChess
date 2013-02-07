@@ -45,7 +45,7 @@ public class MessageCenter {
             {
             	try {
         			//服务器地址和端口号
-        			sc=new Socket("192.168.1.102",9999);
+        			sc=new Socket("192.168.1.100",9999);
         			din=new DataInputStream(sc.getInputStream());
         			dout=new DataOutputStream(sc.getOutputStream());
 //        			dout.writeUTF("<#Connect#>say hi to server");
@@ -108,6 +108,7 @@ public class MessageCenter {
 						gameCenterHandler.sendMessage(msg1);
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
+						connected=false;
 						e.printStackTrace();
 					} catch (JSONException e) {
 						// TODO Auto-generated catch block
@@ -116,5 +117,18 @@ public class MessageCenter {
 				}
 			}			
 		});
+	}
+	
+	public void disconnect()
+	{
+		try {
+			connected=false;
+			din.close();
+			dout.close();
+			sc.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 }

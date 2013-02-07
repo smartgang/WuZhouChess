@@ -62,6 +62,7 @@ public class ChessBoardView extends View {
 	private Player playerDown;
 	private Player currentPlayer;
 	private Player opponentPlayer;
+
 	//当前回合玩家所花费的时间
 	private int currentRoundTime;
 	//两个颜色的棋子序列，初始各为5个，减为0个则输，达到10个判赢
@@ -122,24 +123,39 @@ public class ChessBoardView extends View {
 		initialViewResource();
 		gameStatus=GAME_STATUS_PREPARE;
 		heartBeatFlag=true;
+		
 //		heartBeatThread.start();
 	}
 	//初始始化棋盘及两列棋子，黑棋在上，白棋在下
 	private void chessBoardInitialize()
 	{
 		chessBoard=new ChessBoard();
-		if(playerUp!=null)playerUp.setChessArray(getChessArray(0,playerUp.getColor()));
-		if(playerDown!=null)playerDown.setChessArray(getChessArray(4,playerDown.getColor()));
-/*		blackChessArray=new ArrayList<Chess>();
-		whiteChessArray=new ArrayList<Chess>();
-		for(int i=0;i<5;i++)
+		lastChosedChess=null;
+		if(playerUp!=null)
 		{
-			Chess chess=new Chess(i,0,ChessColor_Black);
-			blackChessArray.add(chess);
-			Chess chess2=new Chess(i,4,ChessColor_White);
-			whiteChessArray.add(chess2);
+			playerUp.setChessArray(getChessArray(0,playerUp.getColor()));						
+			playerUp.setTotalPlayTime(0);
 		}
-*/
+		if(playerDown!=null)
+		{
+			playerDown.setChessArray(getChessArray(4,playerDown.getColor()));
+			playerDown.setTotalPlayTime(0);
+		}
+	}
+	//在玩家退出是调用
+	//如果是人类玩家退出，则全部资源都释放
+	//如果是非人类玩家退出，则释放该玩家对应的资源
+	private void playerOut(Player player)
+	{
+		if(player.getPlayerType()==Player.PlayerType_Human)
+		{
+			playerUp=null;
+			playerDown=null;
+		}
+		else//不是人类，则为internet玩家
+		{
+			playerUp=null;
+		}
 	}
 	//初始化棋子，用于附给玩家
 	private ArrayList<Chess> getChessArray(int position, int color)
@@ -190,6 +206,11 @@ public class ChessBoardView extends View {
 		
 		upPlayerName.setText(playerUp.getPlayerName());
 		downPlayerName.setText(playerDown.getPlayerName());
+		currentPlayer.setTotalPlayTime(0);
+		opponentPlayer.setTotalPlayTime(0);
+		lastChosedChess=null;
+		currentRoundTime=0;
+		
 		
 		gameStatus=GAME_STATUS_PLAYING;//开始游戏
 		
@@ -205,32 +226,31 @@ public class ChessBoardView extends View {
 		}				
 	}
 	//暂停游戏，将游戏状态设置为暂停
-	private void gamePause()
+	public void gamePause()
 	{
 		gameStatus=GAME_STATUS_PAUSE;
+		
 	}
 	//恢复游戏，将游戏状态设置为游戏中
-	private void gameResume()
+	public void gameResume()
 	{
 		gameStatus=GAME_STATUS_PLAYING;
 	}
 	//重新开始
-	private void gameRestart()
+	public void gameRestart()
 	{
 		//TODO
 		//1.重新初始化棋盘
 		//2.新局要双方交换棋子颜色（但是玩家位置不变）
 		//3.再重新开始
-		
-		int color=playerDown.getColor();
-		playerDown.setColor(playerUp.getColor());
-		playerUp.setColor(color);
-
-		playerDown.setTotalPlayTime(0);
-		playerUp.setTotalPlayTime(0);
-		
-		chessBoardInitialize();
-		
+		gameStatus=GAME_STATUS_PREPARE;
+		if(playerUp==null&&playerDown==null)
+		{
+			int color=playerDown.getColor();
+			playerDown.setColor(playerUp.getColor());
+			playerUp.setColor(color);
+		}		
+		chessBoardInitialize();		
 		gameStart();
 		
 	}
@@ -334,7 +354,13 @@ public class ChessBoardView extends View {
 					}
 					break;
 				case ACTION_MSG_START:
+					if(playerUp==null||playerDown==null)break;
 					rightButton.setText("暂停");//改变状态时，要改变界面元素的值
+					if(gameStatus==GAME_STATUS_OVER)
+					{	//如果是重新开始，从网络则发过来的也是start的命令
+						gameRestart();
+						break;
+					}
 					gameStart();//开始游戏
 					break;
 				case ACTION_MSG_PAUSE:
@@ -1107,14 +1133,13 @@ public class ChessBoardView extends View {
 	//供外部调用，传入对手退出的信息
 	public void opponentOut()
 	{
-		if(gameStatus!=GAME_STATUS_OVER)
+		if(gameStatus==GAME_STATUS_PLAYING||gameStatus==GAME_STATUS_PAUSE)
 		{//如果游戏没有结束，对方退出，则判已方胜
+			playerOut(playerUp);
 			Message msgWin=new Message();
 			msgWin.what=ACTION_MSG_OVER;
 			msgWin.obj=ACTION_MSG_VITORY;
 			actionHandler.sendMessage(msgWin);
 		}
-		playerUp=null;
-		opponentPlayer=null;
 	}
 }

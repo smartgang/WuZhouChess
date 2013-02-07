@@ -21,6 +21,7 @@ import com.example.wuzhouchess.Views.ChessBoardView;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -240,11 +241,12 @@ public class InternetGameActivity extends Activity{
 					break;
 				case ChessBoardView.ACTION_MSG_EXIT:
 					//游戏界面中选择退出游戏:
-					//1.将退出消息发送给服务器（EXIT)
-					//2.服务器收到后近回EXIT_RSP，携带table list
-					//3.在Singaling中处理table list，刷新进入到GameTable界面，此处不做处理
-					SignalingMessage sMsg=new SignalingMessage(SignalingMessage.SIGNALING_TYPE_INFO_EXIT,null);
+					//1.将退出消息发送给服务器（OUT_TABLE)
+					//2.服务器收到后近回GameHall info
+					//3.在Information中处理GameHall，刷新进入到GameHall界面，此处不做处理
+					SignalingMessage sMsg=new SignalingMessage(SignalingMessage.SIGNALING_TYPE_OUT_TABLE,null);
 					messageCenter.sendMessag(sMsg);
+					gameTable=null;
 					break;
 					default:break;				
 				}
@@ -283,31 +285,21 @@ public class InternetGameActivity extends Activity{
 			//1.取出player信息,保存到remotePlayer中
 			//3.创建remoteChessBoardPlayer,设置到cbv中
 			remotePlayer=sMsg.getInformation().getPlayer();
+			gameTable.playerIn(remotePlayer);
 			remoteChessBoardPlayer=new InternetPlayer(remotePlayer.name, remotePlayer.color, Player.PlayerType_Internet);
     		cbv.setPlayer(remoteChessBoardPlayer);
-    		
+    		    		
 			Message msg3=new Message();
 			msg3.obj=0;
 			msg3.what=GAME_STATUS_GAMETABLE;
 			gameStatusHandler.sendMessage(msg3);
 			break;
-		case SignalingMessage.SIGNALING_TYPE_INFO_EXIT:
-			//TODO:收到EXIT消息，表示是游戏对手退出
+		case SignalingMessage.SIGNALING_TYPE_OUT_TABLE:
+			//TODO:收到退出游戏桌消息
 			//1.调用chessBoardView中的oppoentOut函数通知游戏界面
 			cbv.opponentOut();
 			gameTable.playerOut(remotePlayer);
 			remotePlayer=null;
-			break;
-		case SignalingMessage.SIGNALING_TYPE_IFNO_EXIT_RSP:
-			//TODO:收到EXIT_RSP消息，表示服务器接收了退出请求,消息附带GameHall信息
-			//1.刷新GameHall信息
-			//2.进入GameHall界面
-			gameTable=null;
-			gameHall=sMsg.getInformation().getGameHall();
-			Message msg4=new Message();
-			msg4.obj=0;
-			msg4.what=GAME_STATUS_GAMEHALL;
-			gameStatusHandler.sendMessage(msg4);
 			break;
 		default:break;
 		}
@@ -316,21 +308,22 @@ public class InternetGameActivity extends Activity{
 	private void processData(MessageBody msg)
 	{
 		DataMessage dMsg=(DataMessage)msg;
+		Message msg1=new Message();
 		switch(dMsg.dataType)
 		{
 		case DataMessage.DATA_TYPE_MOVEMENT:
 			//通过调用函数的形式将接收到的移动信息传递给player
-			Message msg2=new Message();
-			msg2.what=ChessBoardView.ACTION_MSG_MOVEMENT;
-			msg2.obj=dMsg.getMovement();
-			if(cbv!=null)ChessBoardView.actionHandler.sendMessage(msg2);
+
+			msg1.what=ChessBoardView.ACTION_MSG_MOVEMENT;
+			msg1.obj=dMsg.getMovement();
+			if(cbv!=null)ChessBoardView.actionHandler.sendMessage(msg1);
 			break;
 		case DataMessage.DATA_TYPE_CONTROL_READY:
 			//接收到对方发来的准备消息
 			if(gameTable.getPlayer2()!=null)
 			{
 				gameTable.getPlayer2().status=GamePlayer.STATUS_READY;
-				Message msg1=new Message();
+//				Message msg1=new Message();
 				msg1.obj=0;
 				msg1.what=GAME_STATUS_GAMEPLAYING_READY;
 				gameStatusHandler.sendMessage(msg1);
@@ -338,10 +331,20 @@ public class InternetGameActivity extends Activity{
 			break;
 		case DataMessage.DATA_TYPE_CONTROL_START:
 			//两边都准备好了之后，服务器会下发开始指令
-			Message msg1=new Message();
+//			Message msg1=new Message();
 			msg1.obj=0;
 			msg1.what=GAME_STATUS_GAMEPLAYING_START;
 			gameStatusHandler.sendMessage(msg1);			
+			break;
+		case DataMessage.DATA_TYPE_CONTROL_PAUSE:
+			msg1.obj=0;
+			msg1.what=ChessBoardView.ACTION_MSG_PAUSE;
+			ChessBoardView.actionHandler.sendMessage(msg1);		
+			break;
+		case DataMessage.DATA_TYPE_CONTROL_RESUME:
+			msg1.obj=0;
+			msg1.what=ChessBoardView.ACTION_MSG_RESUME;
+			ChessBoardView.actionHandler.sendMessage(msg1);		
 			break;
 		default:break;
 		}
@@ -349,7 +352,22 @@ public class InternetGameActivity extends Activity{
 	//处理Information消息
 	private void processInformation(MessageBody msg)
 	{
-		
+		InformationMessage dMsg=(InformationMessage)msg;
+		switch(dMsg.informationType)
+		{
+		case InformationMessage.INFORMATION_TYPE_HALL:
+			//收到GameHall infor后，更新gameHall，并进入gameHall视图
+			gameHall=dMsg.getGameHall();
+			Message msg2=new Message();
+			msg2.what=GAME_STATUS_GAMEHALL;
+			gameStatusHandler.sendMessage(msg2);
+			break;
+		case InformationMessage.INFORMATION_TYPE_TABLE:
+			break;
+		case InformationMessage.INFORMATION_TYPE_PLAYER:		
+			break;
+		default:break;
+		}
 	}
 	//处理Chatting消息
 	private void processChatting(MessageBody msg)
@@ -383,7 +401,13 @@ public class InternetGameActivity extends Activity{
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-				
+				SignalingMessage sMsg=new SignalingMessage(SignalingMessage.SIGNALING_TYPE_INFO_EXIT,null);
+				messageCenter.sendMessag(sMsg);
+				messageCenter.disconnect();
+				//切换回主页
+	//			Intent intent=new Intent(InternetGameActivity.this,MainActivity.class);		
+	//			startActivity(intent);
+				InternetGameActivity.this.finish();
 			}
 			
 		});
@@ -410,7 +434,7 @@ public class InternetGameActivity extends Activity{
 				gameTable=new GameTable();
 				gameTable.setName(localPlayer.name);
 				gameTable.setID(localPlayer.ID);
-				gameTable.setPlayer1(localPlayer);
+				gameTable.playerIn(localPlayer);
 				
 				if(cbv!=null)
 				{
@@ -443,25 +467,19 @@ public class InternetGameActivity extends Activity{
         		//5.发送进入table的消息给服务器
         		gameTable=gameHall.tableList.get(arg2);
         		if(gameTable.playerNum==2)return ;
-        		//是进入别人的table，要判断已存在的人是player1还是player2
-        		if(gameTable.player1==null)
-        		{
-        			gameTable.setPlayer1(localPlayer);
-        			remotePlayer=gameTable.getPlayer2();
-        		}
-        		else
-        		{
-        			gameTable.setPlayer2(localPlayer);
-        			remotePlayer=gameTable.getPlayer1();//将remotePlayer读出
-        		}        		
+        		//是进入别人的table，并且设置remotePlayer
+        		gameTable.playerIn(localPlayer);
+        		remotePlayer=gameTable.getOppoentPlayer(localPlayer);
+        		
         		if(remotePlayer.color==Player.ChessColor_Black)localPlayer.color=Player.ChessColor_White;
         		else localPlayer.color=Player.ChessColor_Black;
+        		
         		remoteChessBoardPlayer=new InternetPlayer(remotePlayer.name, remotePlayer.color, Player.PlayerType_Internet);
         		localChessBoardPlayer=new HumanPlayer(localPlayer.name, localPlayer.color, Player.PlayerType_Human);
-				cbv.setPlayer(remoteChessBoardPlayer);
-				cbv.setPlayer(localChessBoardPlayer);
 				
-        		gameTable.playerNum=2;       		
+        		cbv.setPlayer(remoteChessBoardPlayer);
+				cbv.setPlayer(localChessBoardPlayer);
+				  		
 				InformationMessage tableMsg=new InformationMessage(InformationMessage.INFORMATION_TYPE_TABLE,null,gameTable,null);
 				SignalingMessage sMsg=new SignalingMessage(SignalingMessage.SIGNALING_TYPE_IN_TABLE, tableMsg);
 				messageCenter.sendMessag(sMsg);
@@ -519,8 +537,8 @@ public class InternetGameActivity extends Activity{
 			GameTable table=(GameTable)getItem(position);
 			if(table!=null)
 			{
-				tvPlayer1.setText(table.getPlayer1().name);
-				if(table.playerNum==2)tvPlayer2.setText(table.getPlayer2().name);
+				if(table.getPlayer1()!=null)tvPlayer1.setText(table.getPlayer1().name);
+				if(table.getPlayer2()!=null)tvPlayer2.setText(table.getPlayer2().name);
 				tvStatus.setText(String.valueOf(table.status));
 			}				
 			return linearLayout;

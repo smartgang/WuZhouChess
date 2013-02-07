@@ -84,7 +84,8 @@ public class PlayActivity extends Activity {
 				// TODO Auto-generated method stub
 				switch(msg.what)
 				{
-				case ChessView.GAME_STATUS_GAMEPLAYING_END:
+				case ChessBoardView.ACTION_MSG_EXIT:
+					PlayActivity.this.finish();
 					break;
 				default:break;
 				}

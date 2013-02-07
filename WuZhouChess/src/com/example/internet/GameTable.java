@@ -85,10 +85,6 @@ public class GameTable {
 	/**
 	 * @param player1 the player1 to set
 	 */
-	public void setPlayer1(GamePlayer player1) {
-		if(player1==null)playerNum++;
-		this.player1 = player1;
-	}
 
 	/**
 	 * @return the player2
@@ -100,10 +96,6 @@ public class GameTable {
 	/**
 	 * @param player2 the player2 to set
 	 */
-	public void setPlayer2(GamePlayer player2) {
-		if(player2==null)playerNum++;
-		this.player2 = player2;
-	}
 
 	/**
 	 * @return the playerNum
@@ -142,5 +134,18 @@ public class GameTable {
 			player1=null;
 		else player2=null;
 		playerNum--;	
+	}
+	
+	public void playerIn(GamePlayer player)
+	{
+		if(player1==null)player1=player;
+		else player2=player;
+		playerNum++;
+	}
+	
+	public GamePlayer getOppoentPlayer(GamePlayer player)
+	{
+		if(player1.name.equals(player.name))return player2;
+		else return player1;
 	}
 }
